@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>巫冠呈 Guan-Cheng Wu</title>
+  <meta name="description" content="巫冠呈 (Guan-Cheng Wu) 的個人主頁。國立成功大學 航空太空工程學系 雙主修 資訊工程學系。">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="巫冠呈 Guan-Cheng Wu">
+  <meta property="og:description" content="國立成功大學 · 航空太空工程學系 雙主修 資訊工程學系">
+  <meta property="og:type" content="website">
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-deep: #07090e;
+      --card-bg: rgba(13, 17, 28, 0.75);
+      --card-bg-hover: rgba(18, 23, 38, 0.85);
+      --card-border-default: rgba(255, 255, 255, 0.06);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --accent-cyan: #38bdf8;
+      --accent-blue: #60a5fa;
+      --accent-indigo: #818cf8;
+      --accent-teal: #2dd4bf;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-deep);
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-deep);
+      color: var(--text-primary);
+      line-height: 1.65;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Modern Linear Static Ambient Depth Overlay */
+    .ambient-atmosphere {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: 
+        radial-gradient(1000px circle at 50% -10%, rgba(56, 189, 248, 0.08) 0%, transparent 65%),
+        radial-gradient(800px circle at 85% 40%, rgba(99, 102, 241, 0.05) 0%, transparent 60%),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px;
+    }
+
+    /* Layout Shell */
+    .layout-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+
+    /* Navigation Bar */
+    .navbar {
+      position: sticky;
+      top: 18px;
+      z-index: 100;
+      margin: 18px auto 44px;
+      max-width: 1040px;
+      background: rgba(8, 12, 22, 0.72);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--card-border-default);
+      border-radius: 14px;
+      padding: 12px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .navbar:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .brand-glyph {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(96, 165, 250, 0.12) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--accent-cyan);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-items {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .lang-btn {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn:hover {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: var(--accent-cyan);
+    }
+
+    /* Hero Section */
+    .hero-wrap {
+      padding: 48px 0 54px;
+    }
+
+    .dept-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.07);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      margin-bottom: 24px;
+    }
+
+    .dept-badge-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background: var(--accent-teal);
+      box-shadow: 0 0 8px var(--accent-teal);
+    }
+
+    .hero-name {
+      font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+      margin-bottom: 26px;
+    }
+
+    .hero-name .en-tag {
+      font-size: 0.55em;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-left: 14px;
+      letter-spacing: -0.01em;
+      font-family: var(--font-mono);
+    }
+
+    .hero-cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .cta-primary {
+      color: #030712;
+      background: linear-gradient(135deg, #38bdf8 0%, #60a5fa 100%);
+      box-shadow: 0 4px 18px rgba(56, 189, 248, 0.25);
+    }
+
+    .cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.4);
+    }
+
+    .cta-ghost {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border-default);
+      backdrop-filter: blur(12px);
+    }
+
+    .cta-ghost:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-2px);
+    }
+
+    /* Section Structure */
+    .section-block {
+      margin-top: 64px;
+    }
+
+    .sec-kicker {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .sec-title {
+      font-size: 25px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    /* Bento Grid with Linear-style Border Ingress Spotlight */
+    .bento-container {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .bento-panel {
+      position: relative;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 28px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 1px Border Ingress Layer: Glows nearest to mouse cursor */
+    .bento-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 1px;
+      background: radial-gradient(
+        320px circle at var(--mouse-x, -999px) var(--mouse-y, -999px),
+        rgba(56, 189, 248, 0.5),
+        rgba(255, 255, 255, 0.09) 35%,
+        var(--card-border-default) 100%
+      );
+      -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      transition: background 0.08s ease;
+    }
+
+    /* Subtle Card Surface Specular Glow */
+    .bento-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      background: radial-gradient(
+        450px circle at var(--mouse-x, -999px) var(--mouse-y, -999px),
+        rgba(56, 189, 248, 0.04),
+        transparent 70%
+      );
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .bento-panel:hover {
+      background: var(--card-bg-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+    }
+
+    .bento-panel:hover::after {
+      opacity: 1;
+    }
+
+    .w-12 { grid-column: span 12; }
+    .w-6  { grid-column: span 6; }
+
+    /* Featured Presentation Banner */
+    .talk-tags {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .tag-chip {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+    }
+
+    .tag-cyan {
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.25);
+    }
+
+    .tag-indigo {
+      color: var(--accent-indigo);
+      background: rgba(129, 140, 248, 0.1);
+      border-color: rgba(129, 140, 248, 0.25);
+    }
+
+    .talk-heading {
+      font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.35;
+      margin-bottom: 14px;
+      letter-spacing: -0.015em;
+    }
+
+    .talk-summary {
+      font-size: 14.8px;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin-bottom: 22px;
+    }
+
+    .talk-cards-trio {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .trio-item {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .trio-label {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      margin-bottom: 4px;
+    }
+
+    .trio-desc {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .talk-launch-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #030712;
+      background: var(--accent-cyan);
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-launch:hover {
+      background: #7dd3fc;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.45);
+    }
+
+    /* Project Cards */
+    .card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 18.5px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .pill-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 20px;
+    }
+
+    .micro-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: var(--text-secondary);
+    }
+
+    .card-link-group {
+      display: flex;
+      gap: 16px;
+      margin-top: auto;
+    }
+
+    .text-link {
+      color: var(--accent-cyan);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: gap 0.2s ease;
+    }
+
+    .text-link:hover {
+      gap: 8px;
+    }
+
+    /* Skills Grid */
+    .category-header {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      margin-bottom: 14px;
+    }
+
+    .skills-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .skill-badge:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      background: rgba(56, 189, 248, 0.07);
+      color: var(--accent-cyan);
+    }
+
+    .skill-badge.starred {
+      border-color: rgba(56, 189, 248, 0.25);
+      color: var(--accent-cyan);
+    }
+
+    /* Contact Block with Click-to-Copy */
+    .contact-card-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .contact-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .contact-sub {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .email-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .email-copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+      text-align: left;
+    }
+
+    .email-copy-btn:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .email-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .email-type {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      min-width: 65px;
+    }
+
+    .copy-hint {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-tertiary);
+      transition: all 0.2s ease;
+    }
+
+    .email-copy-btn:hover .copy-hint {
+      color: var(--accent-cyan);
+    }
+
+    .copy-hint.copied {
+      color: var(--accent-teal) !important;
+      font-weight: 700;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border-default);
+      padding: 34px 0;
+      margin-top: 72px;
+    }
+
+    .footer-content {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s ease;
+    }
+
+    .footer-nav a:hover {
+      color: var(--accent-cyan);
+    }
+
+    /* Language Switch Visibility */
+    [data-lang="zh"] .i18n-en {
+      display: none !important;
+    }
+
+    [data-lang="en"] .i18n-zh {
+      display: none !important;
+    }
+
+    @media (max-width: 860px) {
+      .w-6 {
+        grid-column: span 12;
+      }
+      .navbar .nav-links {
+        display: none;
+      }
+      .bento-panel {
+        padding: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Static Deep Dark Atmosphere -->
+  <div class="ambient-atmosphere"></div>
+
+  <!-- Layout Container -->
+  <div class="layout-shell">
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+      <a href="#" class="brand-group">
+        <div class="brand-glyph">W</div>
+        <span class="brand-title">
+          <span class="i18n-zh">巫冠呈</span>
+          <span class="i18n-en">Guan-Cheng Wu</span>
+        </span>
+      </a>
+
+      <div class="nav-items">
+        <ul class="nav-links">
+          <li>
+            <a href="#about">
+              <span class="i18n-zh">關於</span>
+              <span class="i18n-en">About</span>
+            </a>
+          </li>
+          <li>
+            <a href="#talks">
+              <span class="i18n-zh">簡報</span>
+              <span class="i18n-en">Talks</span>
+            </a>
+          </li>
+          <li>
+            <a href="#projects">
+              <span class="i18n-zh">專案</span>
+              <span class="i18n-en">Projects</span>
+            </a>
+          </li>
+          <li>
+            <a href="#skills">
+              <span class="i18n-zh">技能</span>
+              <span class="i18n-en">Skills</span>
+            </a>
+          </li>
+          <li>
+            <a href="#contact">
+              <span class="i18n-zh">聯絡</span>
+              <span class="i18n-en">Contact</span>
+            </a>
+          </li>
+        </ul>
+
+        <button class="lang-btn" id="langToggleBtn" type="button" aria-label="Toggle Language">
+          <span class="i18n-zh">EN</span>
+          <span class="i18n-en">中文</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-wrap" id="about">
+      <div class="dept-badge">
+        <span class="dept-badge-dot"></span>
+        <span class="i18n-zh">成功大學 · 航空太空工程學系 雙主修 資訊工程學系</span>
+        <span class="i18n-en">NCKU · Aerospace Engineering & Computer Science</span>
+      </div>
+
+      <h1 class="hero-name">
+        <span class="i18n-zh">巫冠呈<span class="en-tag">Guan-Cheng Wu (BlueW)</span></span>
+        <span class="i18n-en">Guan-Cheng Wu<span class="en-tag">BlueW</span></span>
+      </h1>
+
+      <div class="hero-cta-group">
+        <a href="#projects" class="cta-btn cta-primary">
+          <span class="i18n-zh">瀏覽精選專案 ➜</span>
+          <span class="i18n-en">Explore Projects ➜</span>
+        </a>
+        <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer" class="cta-btn cta-ghost">
+          <span>GitHub @BigBlueW ↗</span>
+        </a>
+        <a href="#contact" class="cta-btn cta-ghost">
+          <span class="i18n-zh">聯絡方式</span>
+          <span class="i18n-en">Get in Touch</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Featured Presentation -->
+    <section class="section-block" id="talks">
+      <div class="sec-kicker">
+        <span class="i18n-zh">[ 公開簡報與展示 ]</span>
+        <span class="i18n-en">[ PRESENTATIONS ]</span>
+      </div>
+      <h2 class="sec-title">
+        <span class="i18n-zh">最新研究簡報</span>
+        <span class="i18n-en">Featured Presentation</span>
+      </h2>
+
+      <div class="bento-container">
+        <div class="bento-panel w-12">
+          <div class="talk-tags">
+            <span class="tag-chip tag-cyan">
+              <span class="i18n-zh">實驗室組會</span>
+              <span class="i18n-en">LAB GROUP MEETING</span>
+            </span>
+            <span class="tag-chip">2026-09-15</span>
+            <span class="tag-chip tag-indigo">
+              <span class="i18n-zh">11-Slide 互動簡報</span>
+              <span class="i18n-en">INTERACTIVE SLIDE DECK</span>
+            </span>
+          </div>
+
+          <h3 class="talk-heading">
+            <span class="i18n-zh">自監督潛在動作模型（LAM）理論進展與 AI 空戰實測剖析</span>
+            <span class="i18n-en">Self-Supervised Latent Action Models (LAM) and AI Air Combat Analysis</span>
+          </h3>
+
+          <p class="talk-summary">
+            <span class="i18n-zh">
+              探討如何突破傳統模仿學習（BC）缺乏搖桿動作標籤與純強化學習（RL）探索成本高昂之困境，利用逆動力學（IDM）與前向世界模型（FDM）互斥閉環，自海量專家動態中自監督提煉動作先驗；並結合空戰仿真實測，深入剖析 3.14 億步 SAC 模型局限，提出階層式切換控制、PFSP 對手池與 28 維時序意圖擴充架構。
+            </span>
+            <span class="i18n-en">
+              Addressing the lack of action labels in Behavioral Cloning (BC) and high exploration costs in pure Reinforcement Learning (RL), exploring how Latent Action Models (LAM) leverage Inverse Dynamics (IDM) and Forward Dynamics (FDM) in a dual-loop framework to extract action priors. Incorporating empirical evaluation of a 314M-step SAC baseline in high-speed flight simulation, proposing hierarchical switching control, PFSP opponent pool sampling, and 28D latent action expansion.
+            </span>
+          </p>
+
+          <div class="talk-cards-trio">
+            <div class="trio-item">
+              <div class="trio-label">
+                <span class="i18n-zh">▹ PART 1: 潛在動作模型</span>
+                <span class="i18n-en">▹ PART 1: Latent Action Models</span>
+              </div>
+              <div class="trio-desc">
+                <span class="i18n-zh">三階段自監督提煉架構、坐標無關空間動力學、BigFish 128 維 PCA 投影散佈。</span>
+                <span class="i18n-en">Three-stage pipeline, coordinate-invariant dynamics, BigFish 128D PCA latent projection.</span>
+              </div>
+            </div>
+            <div class="trio-item">
+              <div class="trio-label">
+                <span class="i18n-zh">▹ PART 2: 空戰模型實測</span>
+                <span class="i18n-en">▹ PART 2: Air Combat Evaluation</span>
+              </div>
+              <div class="trio-desc">
+                <span class="i18n-zh">官方 Baseline 模型逆向剖析、末端 2 度持鎖抖動痛點、階層切換控制與 PFSP 對手池。</span>
+                <span class="i18n-en">Official SAC baseline breakdown, 2° aiming jitter challenges, switching control, and PFSP.</span>
+              </div>
+            </div>
+            <div class="trio-item">
+              <div class="trio-label">
+                <span class="i18n-zh">▹ PART 3: 算力與 LOCAL AI</span>
+                <span class="i18n-en">▹ PART 3: Compute & Local AI</span>
+              </div>
+              <div class="trio-desc">
+                <span class="i18n-zh">工作站私有算力資源、100% 本地隱私、長篇 PDF 論文研讀與雙工具鏈體驗。</span>
+                <span class="i18n-en">Workstation compute setup, 100% local privacy, long-context paper reader, dual toolchains.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="talk-launch-row">
+            <a href="slides/260915/" class="btn-launch">
+              <span class="i18n-zh">開啟全螢幕簡報 (Launch Slides)</span>
+              <span class="i18n-en">Launch Fullscreen Slides</span>
+              <span>➜</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Selected Projects -->
+    <section class="section-block" id="projects">
+      <div class="sec-kicker">
+        <span class="i18n-zh">[ 精選專案與實作 ]</span>
+        <span class="i18n-en">[ PROJECTS & TOOLS ]</span>
+      </div>
+      <h2 class="sec-title">
+        <span class="i18n-zh">精選開源與工程專案</span>
+        <span class="i18n-en">Featured Projects</span>
+      </h2>
+
+      <div class="bento-container">
+        <!-- Project 1: NCKU Moodle Keeper -->
+        <div class="bento-panel w-6">
+          <div class="card-head">
+            <h3 class="card-title">NCKU Moodle Keeper</h3>
+            <span class="tag-chip tag-cyan">EXTENSION</span>
+          </div>
+          <p class="card-desc">
+            <span class="i18n-zh">
+              成大學生必備開源瀏覽器擴充功能。解決成大 Moodle 平台自動逾期登出痛點，提供自動心跳續期機制；並內建本地樣板匹配驗證碼極速辨識演算法，支援 Moodle、選課系統等多個校內核心系統。
+            </span>
+            <span class="i18n-en">
+              Open-source browser extension for NCKU students. Solves session timeouts on NCKU Moodle with heartbeat renewals, and features native template-matching captcha auto-solve across Moodle and course registration portals.
+            </span>
+          </p>
+          <div class="pill-stack">
+            <span class="micro-pill">JavaScript</span>
+            <span class="micro-pill">Chrome Extension</span>
+            <span class="micro-pill">Captcha OCR</span>
+            <span class="micro-pill">Open Source</span>
+          </div>
+          <div class="card-link-group">
+            <a href="https://github.com/bigbluew/ncku-moodle-keeper" target="_blank" rel="noopener noreferrer" class="text-link">
+              <span>GitHub Repo</span> <span>↗</span>
+            </a>
+            <a href="https://chromewebstore.google.com/detail/ncku-moodle-keeper/npnhndaifpmkbolbkplmclenjejjfloo" target="_blank" rel="noopener noreferrer" class="text-link">
+              <span>Chrome Web Store</span> <span>↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Project 2: AMR Robot Platform -->
+        <div class="bento-panel w-6">
+          <div class="card-head">
+            <h3 class="card-title">
+              <span class="i18n-zh">AMR 雙臂自主移動機器人</span>
+              <span class="i18n-en">AMR Mobile Manipulation Platform</span>
+            </h3>
+            <span class="tag-chip tag-indigo">ROBOTICS</span>
+          </div>
+          <p class="card-desc">
+            <span class="i18n-zh">
+              自主移動機器人（AMR）底盤導航與雙 TM5S 機械手臂協同作業平台。整合 ROS 2 與 Nav2 導航堆疊，並運用自定義微調之 YOLO 目標檢測模型，進行實體環境動態避障、物體分類辨識與自主夾取（技術筆記與文件整理中）。
+            </span>
+            <span class="i18n-en">
+              Mobile manipulation platform combining an AMR base with dual TM5S robotic arms. Integrates ROS 2 and Nav2 navigation stacks with fine-tuned YOLO object detection for dynamic obstacle avoidance, recognition, and autonomous sorting.
+            </span>
+          </p>
+          <div class="pill-stack">
+            <span class="micro-pill">ROS 2</span>
+            <span class="micro-pill">Nav2</span>
+            <span class="micro-pill">YOLO Detection</span>
+            <span class="micro-pill">TM5S Arms</span>
+          </div>
+          <div class="card-link-group">
+            <span class="text-link" style="color: var(--text-tertiary); cursor: default;">
+              <span class="i18n-zh">技術文件整理中 Coming Soon</span>
+              <span class="i18n-en">Technical Notes Coming Soon</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Project 3: ActInSpace Placeholder -->
+        <div class="bento-panel w-12">
+          <div class="card-head">
+            <h3 class="card-title">
+              <span class="i18n-zh">ActInSpace 國際太空黑客松</span>
+              <span class="i18n-en">ActInSpace International Space Hackathon</span>
+            </h3>
+            <span class="tag-chip">HACKATHON</span>
+          </div>
+          <p class="card-desc" style="max-width: 800px;">
+            <span class="i18n-zh">
+              參與由法國太空總署（CNES）與歐洲太空總署（ESA）主辦之 ActInSpace 國際太空黑客松。挑戰運用航太與太空數據解決地球與太空應用的前沿命題（專案詳細紀錄與成果整理中）。
+            </span>
+            <span class="i18n-en">
+              Participated in the ActInSpace International Hackathon organized by CNES and ESA, applying aerospace engineering and space data to solve practical challenges on Earth and in space (Project highlights coming soon).
+            </span>
+          </p>
+          <div class="pill-stack">
+            <span class="micro-pill">ActInSpace</span>
+            <span class="micro-pill">Aerospace Innovation</span>
+            <span class="micro-pill">System Design</span>
+            <span class="micro-pill">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills & Tech Stack -->
+    <section class="section-block" id="skills">
+      <div class="sec-kicker">
+        <span class="i18n-zh">[ 技術與工具庫 ]</span>
+        <span class="i18n-en">[ TECH STACK ]</span>
+      </div>
+      <h2 class="sec-title">
+        <span class="i18n-zh">專業技能與工具</span>
+        <span class="i18n-en">Skills & Toolchain</span>
+      </h2>
+
+      <div class="bento-container">
+        <!-- Languages -->
+        <div class="bento-panel w-6">
+          <div class="category-header">
+            <span>[ 01 // PROGRAMMING LANGUAGES ]</span>
+          </div>
+          <div class="skills-flex">
+            <span class="skill-badge starred">Python (Favorite)</span>
+            <span class="skill-badge starred">C</span>
+            <span class="skill-badge starred">C++</span>
+            <span class="skill-badge starred">C#</span>
+            <span class="skill-badge">Bash / Shell</span>
+          </div>
+        </div>
+
+        <!-- Robotics & Simulation -->
+        <div class="bento-panel w-6">
+          <div class="category-header">
+            <span>[ 02 // ROBOTICS & SIMULATION ]</span>
+          </div>
+          <div class="skills-flex">
+            <span class="skill-badge starred">ROS 2</span>
+            <span class="skill-badge starred">Nav2</span>
+            <span class="skill-badge starred">YOLO</span>
+            <span class="skill-badge">AirSim</span>
+            <span class="skill-badge">JSBSim</span>
+            <span class="skill-badge">OpenCV</span>
+          </div>
+        </div>
+
+        <!-- 3D CAD & Modeling -->
+        <div class="bento-panel w-6">
+          <div class="category-header">
+            <span>[ 03 // 3D DESIGN & CAD ]</span>
+          </div>
+          <div class="skills-flex">
+            <span class="skill-badge starred">Blender</span>
+            <span class="skill-badge starred">SolidWorks</span>
+            <span class="skill-badge starred">CATIA</span>
+            <span class="skill-badge">AutoCAD</span>
+            <span class="skill-badge">Unity</span>
+            <span class="skill-badge">Unreal Engine</span>
+          </div>
+        </div>
+
+        <!-- Tools & Environment -->
+        <div class="bento-panel w-6">
+          <div class="category-header">
+            <span>[ 04 // ENVIRONMENT & DEV TOOLS ]</span>
+          </div>
+          <div class="skills-flex">
+            <span class="skill-badge starred">Ubuntu / Linux</span>
+            <span class="skill-badge starred">VS Code</span>
+            <span class="skill-badge starred">Git</span>
+            <span class="skill-badge">LaTeX</span>
+            <span class="skill-badge">Obsidian</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Block with Click-to-Copy -->
+    <section class="section-block" id="contact">
+      <div class="sec-kicker">
+        <span class="i18n-zh">[ 聯絡方式 ]</span>
+        <span class="i18n-en">[ CONTACT ]</span>
+      </div>
+      <h2 class="sec-title">
+        <span class="i18n-zh">聯絡與交流</span>
+        <span class="i18n-en">Get in Touch</span>
+      </h2>
+
+      <div class="bento-panel w-12">
+        <div class="contact-card-inner">
+          <div>
+            <div class="contact-title">
+              <span class="i18n-zh">巫冠呈 Guan-Cheng Wu</span>
+              <span class="i18n-en">Guan-Cheng Wu</span>
+            </div>
+            <div class="contact-sub">
+              <span class="i18n-zh">國立成功大學 航空太空工程學系 雙主修 資訊工程學系</span>
+              <span class="i18n-en">National Cheng Kung University · Aerospace & Computer Science</span>
+            </div>
+
+            <div class="email-container">
+              <!-- Click to Copy Personal Email -->
+              <button class="email-copy-btn" data-email="badonkadooonkmc@gmail.com" type="button" title="點擊複製 Email">
+                <div class="email-left">
+                  <span class="email-type">Personal:</span>
+                  <span>badonkadooonkmc@gmail.com</span>
+                </div>
+                <span class="copy-hint">
+                  <span class="i18n-zh">點擊複製</span>
+                  <span class="i18n-en">Copy</span>
+                </span>
+              </button>
+
+              <!-- Click to Copy Academic Email -->
+              <button class="email-copy-btn" data-email="F44136211@gs.ncku.edu.tw" type="button" title="點擊複製 Email">
+                <div class="email-left">
+                  <span class="email-type">Academic:</span>
+                  <span>F44136211@gs.ncku.edu.tw</span>
+                </div>
+                <span class="copy-hint">
+                  <span class="i18n-zh">點擊複製</span>
+                  <span class="i18n-en">Copy</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer" class="cta-btn cta-ghost">
+              <span>GitHub @BigBlueW ↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-content">
+        <div class="footer-copyright">
+          &copy; 2026 巫冠呈 (Guan-Cheng Wu / BlueW). Hosted on GitHub Pages.
+        </div>
+        <div class="footer-nav">
+          <a href="#">
+            <span class="i18n-zh">返回頂部 ↑</span>
+            <span class="i18n-en">Back to Top ↑</span>
+          </a>
+          <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // 1. Language Switcher
+    (function() {
+      const htmlEl = document.documentElement;
+      const toggleBtn = document.getElementById('langToggleBtn');
+      const savedLang = localStorage.getItem('bluew_lang') || 'zh';
+      setLanguage(savedLang);
+
+      toggleBtn.addEventListener('click', function() {
+        const currentLang = htmlEl.getAttribute('data-lang') || 'zh';
+        const newLang = currentLang === 'zh' ? 'en' : 'zh';
+        setLanguage(newLang);
+      });
+
+      function setLanguage(lang) {
+        htmlEl.setAttribute('data-lang', lang);
+        htmlEl.setAttribute('lang', lang === 'zh' ? 'zh-TW' : 'en');
+        localStorage.setItem('bluew_lang', lang);
+      }
+    })();
+
+    // 2. Click-to-Copy Email Controller
+    (function() {
+      document.querySelectorAll('.email-copy-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const email = this.getAttribute('data-email');
+          const hint = this.querySelector('.copy-hint');
+          const originalHTML = hint.innerHTML;
+
+          navigator.clipboard.writeText(email).then(() => {
+            const isZh = document.documentElement.getAttribute('data-lang') === 'zh';
+            hint.textContent = isZh ? '✓ 已複製！' : '✓ Copied!';
+            hint.classList.add('copied');
+
+            setTimeout(() => {
+              hint.innerHTML = originalHTML;
+              hint.classList.remove('copied');
+            }, 2200);
+          }).catch(() => {
+            prompt('請手動複製 Email:', email);
+          });
+        });
+      });
+    })();
+
+    // 3. Linear-Style Card Border Ingress Spotlight (Pure CSS Mask + Mouse Coordinates)
+    (function() {
+      const panels = document.querySelectorAll('.bento-panel');
+
+      window.addEventListener('mousemove', function(e) {
+        panels.forEach(panel => {
+          const rect = panel.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          panel.style.setProperty('--mouse-x', `${x}px`);
+          panel.style.setProperty('--mouse-y', `${y}px`);
+        });
+      }, { passive: true });
+    })();
+  </script>
+</body>
+</html>

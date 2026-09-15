@@ -1,0 +1,2752 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="html-slides v0.9.5">
+  <title>潛在動作模型（LAM）與 AI dogfight — 5923 實驗室組會</title>
+  
+  <!-- High-Impact Bold Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for Clean Math Symbols -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+
+  <style>
+    /* =========================================================
+       DESIGN SYSTEM: AEROSPACE COMMAND CENTER & OBSIDIAN THEME
+       ========================================================= */
+    :root {
+      --bg-void: #060911;
+      --bg-surface: #0b111e;
+      --bg-card: rgba(13, 20, 36, 0.90);
+      --bg-card-hover: rgba(20, 31, 56, 0.98);
+      
+      --text-white: #ffffff;
+      --text-sub: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --accent-cyan: #38bdf8;
+      --accent-cyan-glow: rgba(56, 189, 248, 0.35);
+      --accent-mint: #34d399;
+      --accent-mint-glow: rgba(52, 211, 153, 0.35);
+      --accent-amber: #fb923c;
+      --accent-purple: #c084fc;
+      --accent-red: #f87171;
+      
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-card: rgba(255, 255, 255, 0.12);
+      --border-glow: rgba(56, 189, 248, 0.5);
+
+      --font-display: 'Space Grotesk', 'Noto Sans TC', sans-serif;
+      --font-body: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Projector Typography Scale (Increased ~25% for superior legibility) */
+      --title-size: clamp(2.9rem, 4.8vw, 4.4rem);
+      --h2-size: clamp(2.1rem, 3.2vw, 2.9rem);
+      --h3-size: clamp(1.4rem, 1.9vw, 1.75rem);
+      --body-size: clamp(1.15rem, 1.55vw, 1.42rem);
+      --small-size: clamp(0.96rem, 1.2vw, 1.15rem);
+
+      --ease-spatial: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-void);
+      color: var(--text-white);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 12% 15%, rgba(56, 189, 248, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 88% 85%, rgba(192, 132, 252, 0.12) 0%, transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #particleCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.55;
+    }
+
+    /* Telemetry HUD Top Bar */
+    .telemetry-header {
+      position: fixed;
+      top: 22px;
+      left: 44px;
+      right: 44px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-dim);
+      letter-spacing: 1.5px;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan);
+      animation: pulseDot 2s ease infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Spatial Deck */
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      perspective: 1200px;
+      z-index: 2;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      padding: clamp(1.8rem, 3.2vw, 3.5rem) clamp(2.2rem, 4.5vw, 5.0rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.95) translateX(60px);
+      filter: blur(4px);
+      transition: opacity 0.55s var(--ease-spatial),
+                  transform 0.55s var(--ease-spatial),
+                  filter 0.55s var(--ease-spatial);
+      will-change: transform, opacity, filter;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateX(0);
+      filter: blur(0);
+      z-index: 10;
+    }
+
+    .slide.past {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.95) translateX(-60px);
+      filter: blur(4px);
+      z-index: 1;
+    }
+
+    .slide-wrapper {
+      width: 100%;
+      max-width: clamp(1200px, 92vw, 1560px);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Typography Hierarchy */
+    .hud-tag {
+      font-family: var(--font-mono);
+      font-size: clamp(11px, 1.0vw, 13px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: var(--title-size);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1px;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: var(--h2-size);
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.6px;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: var(--body-size);
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 18px;
+    }
+
+    .gradient-cyan-purple {
+      background: linear-gradient(135deg, #38bdf8 15%, #c084fc 85%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .text-cyan { color: var(--accent-cyan); }
+    .text-mint { color: var(--accent-mint); }
+    .text-amber { color: var(--accent-amber); }
+    .text-purple { color: var(--accent-purple); }
+    .text-red { color: var(--accent-red); }
+
+    /* Staggered Entrance */
+    .anim-1, .anim-2, .anim-3, .anim-4 {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s var(--ease-spatial), transform 0.5s var(--ease-spatial);
+    }
+    .slide.active .anim-1 { opacity: 1; transform: translateY(0); transition-delay: 0.06s; }
+    .slide.active .anim-2 { opacity: 1; transform: translateY(0); transition-delay: 0.14s; }
+    .slide.active .anim-3 { opacity: 1; transform: translateY(0); transition-delay: 0.22s; }
+    .slide.active .anim-4 { opacity: 1; transform: translateY(0); transition-delay: 0.30s; }
+
+    /* 3D Glass Cards */
+    .card {
+      position: relative;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: clamp(16px, 1.9vw, 26px);
+      transition: transform 0.35s var(--ease-spatial),
+                  border-color 0.3s ease,
+                  box-shadow 0.3s ease;
+      overflow: hidden;
+      transform-style: preserve-3d;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(56, 189, 248, 0.15),
+        transparent 45%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card:hover {
+      border-color: var(--border-glow);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 28px rgba(56, 189, 248, 0.2);
+    }
+
+    .card-cyan { border-top: 3px solid var(--accent-cyan); }
+    .card-mint { border-top: 3px solid var(--accent-mint); }
+    .card-amber { border-top: 3px solid var(--accent-amber); }
+    .card-purple { border-top: 3px solid var(--accent-purple); }
+    .card-red { border-top: 3px solid var(--accent-red); }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: var(--h3-size);
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Typography & Lists */
+    .hud-pill {
+      display: inline-block;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-subtle);
+      margin-right: 6px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .key-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      margin-top: 6px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .key-points li {
+      font-size: var(--body-size);
+      color: var(--text-sub);
+      line-height: 1.55;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    .key-points li .bullet {
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .key-points li .content {
+      flex: 1;
+      display: inline;
+    }
+
+    .key-points li strong {
+      color: var(--text-white);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Layout Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(16px, 2.2vw, 30px);
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(14px, 1.8vw, 24px);
+      width: 100%;
+    }
+
+    /* Speaker Profile Section */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1.12fr 1fr;
+      gap: clamp(18px, 2.2vw, 28px);
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .profile-dual-media {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      height: 175px;
+      margin-bottom: 12px;
+    }
+
+    .profile-media-item {
+      height: 100%;
+      background: #020611;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-in;
+      transition: transform 0.35s var(--ease-spatial), border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .profile-media-item:hover {
+      transform: scale(1.04);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.3);
+    }
+
+    .profile-media-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Inline Vector Diagrams (SVG Architecture) */
+    .pipeline-svg-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 6px 0 14px 0;
+    }
+
+    .pipeline-svg {
+      width: 100%;
+      max-width: 1180px;
+      height: auto;
+      filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.7));
+    }
+
+    /* UAV Demo Grid for Slide 5 (Intuitive & High Legibility) */
+    .uav-demo-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 18px;
+      width: 100%;
+      margin: 6px 0 16px 0;
+    }
+
+    .uav-camera-panel, .uav-latent-panel {
+      background: rgba(11, 23, 42, 0.82);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+    }
+
+    .uav-camera-panel {
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
+    .uav-latent-panel {
+      border-color: rgba(168, 85, 247, 0.45);
+    }
+
+    .uav-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .uav-motion-block {
+      background: rgba(4, 9, 20, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 8px 12px 9px 12px;
+      margin-bottom: 9px;
+      transition: border-color 0.3s ease;
+    }
+
+    .uav-motion-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .uav-motion-block:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .uav-motion-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .motion-tag {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 5px;
+      text-align: center;
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    .tag-cyan {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+    }
+
+    .tag-purple {
+      background: rgba(192, 132, 252, 0.15);
+      color: var(--accent-purple);
+      border: 1px solid rgba(192, 132, 252, 0.45);
+    }
+
+    .motion-subtitle {
+      font-size: 12.5px;
+      color: var(--text-sub);
+    }
+
+    .uav-motion-content {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .frame-pair {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .frame-box {
+      width: 124px;
+      height: 86px;
+      background: #06101e;
+      border: 1.5px solid #334155;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3px;
+    }
+
+    .frame-box.active-cyan {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+    }
+
+    .frame-box.active-purple {
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 14px rgba(192, 132, 252, 0.4);
+    }
+
+    .tree-svg {
+      width: 114px;
+      height: 56px;
+    }
+
+    .frame-caption {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      color: var(--text-sub);
+      margin-top: 2px;
+      font-weight: 700;
+    }
+
+
+
+    /* 2D Scatter Cluster Reveal States (Reveals ONLY when hovering over #uavLatentPanel) */
+    .cluster-shape {
+      opacity: 0.10;
+      transition: opacity 0.35s var(--ease-spatial), stroke-width 0.3s ease;
+    }
+    .cluster-text {
+      opacity: 0.18;
+      transition: opacity 0.35s var(--ease-spatial);
+    }
+    .latent-point {
+      transition: fill 0.3s ease, r 0.3s ease, filter 0.3s ease;
+    }
+    #uavLatentPanel:hover .cluster-shape {
+      opacity: 1;
+    }
+    #uavLatentPanel:hover .cluster-text {
+      opacity: 1;
+    }
+    #uavLatentPanel:hover .latent-point.cyan-pt {
+      fill: #38bdf8 !important;
+      filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.85));
+    }
+    #uavLatentPanel:hover .latent-point.purple-pt {
+      fill: #c084fc !important;
+      filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.85));
+    }
+
+    .idm-arrow-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .vector-result-box {
+      background: #040914;
+      border-radius: 8px;
+      padding: 9px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .vector-result-box.box-cyan {
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .vector-result-box.box-purple {
+      border-color: rgba(192, 132, 252, 0.4);
+    }
+
+    .vector-formula {
+      font-family: var(--font-mono);
+      font-size: 15.5px;
+      color: var(--text-white);
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+
+    .vector-desc {
+      font-size: 13.5px;
+      color: var(--text-sub);
+      line-height: 1.45;
+    }
+
+    .latent-plot-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .latent-svg {
+      width: 100%;
+      max-height: 190px;
+    }
+
+    /* Multi-Object Visualizer Switcher */
+    .object-switcher {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .obj-btn {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      color: var(--text-sub);
+      font-family: var(--font-display);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .obj-btn:hover {
+      border-color: var(--accent-cyan);
+      color: var(--text-white);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .obj-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+
+    .uav-insight-cue {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      padding: 6px 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 6px;
+      border-left: 3px solid var(--accent-amber);
+      margin-top: 8px;
+    }
+
+    /* Stage Interactive Cards with Modal Triggers */
+    /* Stage Interactive Cards with Modal Triggers */
+    .stage-card-interactive {
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .stage-card-interactive:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 15px rgba(56, 189, 248, 0.25);
+    }
+
+    /* 2D Latent Space Reticle & Active Dots */
+    .latent-point {
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 0.35;
+      cursor: pointer;
+    }
+    .latent-point.active-dot {
+      opacity: 1 !important;
+      r: 6.5px !important;
+      fill: #ffffff !important;
+      stroke: #38bdf8 !important;
+      stroke-width: 2.5px !important;
+      filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.95)) !important;
+    }
+    #purple-dot-0.active-dot,
+    #purple-dot-1.active-dot,
+    #purple-dot-2.active-dot,
+    #purple-dot-3.active-dot {
+      stroke: #c084fc !important;
+      filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.95)) !important;
+    }
+
+    @keyframes beaconPing {
+      0% { r: 5px; opacity: 1; stroke-width: 2.5px; }
+      100% { r: 18px; opacity: 0; stroke-width: 0.5px; }
+    }
+    .beacon-pulse {
+      animation: beaconPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+      pointer-events: none;
+    }
+    .beacon-dot {
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.95));
+    }
+
+    /* Stage Detail Modal Overlay with Entrance Animation */
+    .stage-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease;
+    }
+
+    .stage-modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    .stage-modal-content {
+      background: #091322;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      border-radius: 18px;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.2);
+      max-width: 1040px;
+      width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px 38px;
+      position: relative;
+      transform: scale(0.92) translateY(20px);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .stage-modal-overlay.active .stage-modal-content {
+      transform: scale(1) translateY(0);
+    }
+
+    .stage-modal-close {
+      position: absolute;
+      top: 18px;
+      right: 22px;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 10;
+    }
+
+    .stage-modal-close:hover {
+      background: rgba(244, 63, 94, 0.3);
+      border-color: #f43f5e;
+      color: #f43f5e;
+      transform: scale(1.1);
+    }
+
+    /* Modal Interior Cards & Natural Text Flow */
+    .modal-card {
+      border-radius: 12px;
+      padding: 20px 24px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .modal-card-cyan {
+      border-color: rgba(56, 189, 248, 0.35);
+      background: linear-gradient(145deg, rgba(8, 47, 73, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+    .modal-card-mint {
+      border-color: rgba(52, 211, 153, 0.35);
+      background: linear-gradient(145deg, rgba(6, 78, 59, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+    .modal-card-purple {
+      border-color: rgba(192, 132, 252, 0.35);
+      background: linear-gradient(145deg, rgba(88, 28, 135, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+    .modal-card-amber {
+      border-color: rgba(251, 191, 36, 0.35);
+      background: linear-gradient(145deg, rgba(120, 53, 15, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+
+    .modal-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 12px 0 0 0;
+      padding: 0;
+    }
+
+    .modal-points li {
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: var(--text-sub);
+      position: relative;
+      padding-left: 20px;
+      word-break: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .modal-points li::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.6;
+    }
+
+    .modal-points li strong {
+      color: var(--text-white);
+      font-weight: 700;
+    }
+
+    /* Clean HTML / KaTeX Pipeline Flow for Modals */
+    .pipeline-flow-html {
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 22px;
+      padding: 16px;
+      background: rgba(8, 14, 28, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 14px;
+    }
+    .flow-node {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .flow-node-cyan {
+      border-color: rgba(56, 189, 248, 0.5);
+      background: linear-gradient(145deg, rgba(8, 47, 73, 0.35) 0%, rgba(15, 23, 42, 0.95) 100%);
+    }
+    .flow-node-mint {
+      border-color: rgba(52, 211, 153, 0.5);
+      background: linear-gradient(145deg, rgba(6, 78, 59, 0.35) 0%, rgba(15, 23, 42, 0.95) 100%);
+    }
+    .flow-node-purple {
+      border-color: rgba(192, 132, 252, 0.5);
+      background: linear-gradient(145deg, rgba(88, 28, 135, 0.35) 0%, rgba(15, 23, 42, 0.95) 100%);
+    }
+    .flow-node-amber {
+      border-color: rgba(251, 191, 36, 0.5);
+      background: linear-gradient(145deg, rgba(120, 53, 15, 0.35) 0%, rgba(15, 23, 42, 0.95) 100%);
+    }
+    .flow-node-rose {
+      border-color: rgba(244, 63, 94, 0.5);
+      background: linear-gradient(145deg, rgba(136, 19, 55, 0.35) 0%, rgba(15, 23, 42, 0.95) 100%);
+    }
+    .flow-node-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-white);
+      letter-spacing: 0.5px;
+    }
+    .flow-node-math {
+      font-size: 14.5px;
+      color: var(--accent-cyan);
+      margin: 2px 0;
+      font-weight: 600;
+    }
+    .flow-node-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-cyan);
+      font-size: 18px;
+      font-weight: 900;
+      opacity: 0.85;
+      flex-shrink: 0;
+      padding: 0 2px;
+    }
+
+    /* Thank You Page Minimalist Styling */
+    .thankyou-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 65vh;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .thankyou-title {
+      font-family: var(--font-display);
+      font-size: clamp(4rem, 7vw, 6.2rem);
+      font-weight: 900;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #ffffff 30%, #38bdf8 70%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+
+    /* BigFish Dual Showcase */
+    .bigfish-showcase {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: clamp(18px, 2.4vw, 32px);
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .arcade-box {
+      background: #050a14;
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .arcade-screen {
+      width: 310px;
+      height: 310px;
+      background: #000;
+      border: 2px solid rgba(56, 189, 248, 0.4);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.85), 0 0 22px rgba(56, 189, 248, 0.25);
+      cursor: zoom-in;
+      transition: transform 0.35s var(--ease-spatial), box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+
+    .arcade-screen:hover {
+      transform: scale(1.05);
+      border-color: var(--accent-cyan);
+      box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.85), 0 0 35px rgba(56, 189, 248, 0.55);
+    }
+
+    .arcade-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .pca-figure-card {
+      background: #0a1122;
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 18px 24px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .pca-figure-wrap {
+      flex: 0 0 310px;
+      height: 310px;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      cursor: zoom-in;
+      transition: transform 0.35s var(--ease-spatial), box-shadow 0.35s ease, border-color 0.35s ease;
+    }
+
+    .pca-figure-wrap:hover {
+      transform: scale(1.05);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 30px rgba(56, 189, 248, 0.35);
+    }
+
+    .pca-figure-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* System Architecture Banner for Slide 13 */
+    .paper-fig-banner {
+      background: rgba(10, 16, 30, 0.75);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      cursor: zoom-in;
+      transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s var(--ease-spatial), box-shadow 0.3s ease;
+    }
+    .paper-fig-banner:hover {
+      border-color: var(--border-glow);
+      background: rgba(15, 24, 46, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55), 0 0 24px rgba(56, 189, 248, 0.25);
+    }
+
+    /* QR Code Showcase Box */
+    .qr-box {
+      width: 180px;
+      height: 180px;
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 14px;
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.35);
+      border: 2px solid var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px auto;
+      cursor: zoom-in;
+      transition: transform 0.35s var(--ease-spatial), box-shadow 0.35s ease;
+    }
+
+    .qr-box:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 38px rgba(56, 189, 248, 0.6);
+    }
+
+    .qr-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Takeaway Bar */
+    .takeaway-bar {
+      margin-top: 14px;
+      padding: 12px 20px;
+      border-radius: 12px;
+      background: rgba(10, 18, 34, 0.85);
+      border: 1px solid var(--border-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 15, 0.9);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .lightbox-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .lightbox-content {
+      max-width: 90vw;
+      max-height: 84vh;
+      border-radius: 10px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+
+    .lightbox-caption {
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--accent-cyan);
+      letter-spacing: 1px;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 24px;
+      right: 32px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 24px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .lightbox-close:hover {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+      transform: scale(1.1);
+    }
+
+    /* Progress & Counter */
+    .progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-mint));
+      z-index: 1000;
+      transition: width 0.3s ease;
+    }
+
+    .slide-counter {
+      position: fixed;
+      bottom: 20px;
+      right: 40px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dim);
+      z-index: 1000;
+      background: rgba(10, 15, 26, 0.9);
+      padding: 4px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .slide-nav {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .slide-nav-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .slide-nav-dot.active {
+      background: var(--accent-cyan);
+      transform: scale(1.6);
+      box-shadow: 0 0 10px var(--accent-cyan);
+    }
+
+    .hud-home-btn {
+      position: fixed;
+      top: 18px;
+      left: 24px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+      text-decoration: none;
+      z-index: 1000;
+      background: rgba(10, 15, 26, 0.85);
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hud-home-btn:hover {
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      background: rgba(14, 25, 45, 0.95);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Dynamic Canvas -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- Navigation to Home Portal -->
+  <a href="../../" class="hud-home-btn" title="返回個人主頁"><span>⌂</span> PORTFOLIO</a>
+
+  <!-- Chrome Progress & Navigation -->
+  <div class="progress-bar" id="progress"></div>
+  <div class="slide-counter" id="counter">01 / 11</div>
+  <div class="slide-nav" id="slideNav"></div>
+
+  <!-- Lightbox Modal Container -->
+  <div class="lightbox-modal" id="lightboxModal">
+    <button class="lightbox-close" id="lightboxClose">&times;</button>
+    <img src="" alt="" class="lightbox-content" id="lightboxImg">
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+
+  <!-- Master Slide Deck -->
+  <div class="deck" id="deck">
+
+    <!-- =========================================================
+         SLIDE 1: COVER
+         ========================================================= -->
+    <div class="slide active" data-slide="0">
+      <div class="slide-wrapper">
+        <div style="max-width: 1080px;">
+          <div style="font-family: var(--font-mono); font-size: clamp(0.85rem, 1.1vw, 1.0rem); color: var(--accent-cyan); letter-spacing: 2px; margin-bottom: 16px;">
+            NCKU LAB 5923 · 首次組會進展匯報
+          </div>
+
+          <h1 class="anim-2" style="margin-bottom: 28px;">
+            <span class="gradient-cyan-purple">潛在動作模型（LAM）</span><br>
+            與 AI dogfight
+          </h1>
+
+          <div class="card card-cyan anim-4" style="display: inline-block; padding: 22px 36px; border-left: 4px solid var(--accent-cyan);">
+            <div style="font-family: var(--font-display); font-size: clamp(1.4rem, 2.0vw, 1.85rem); font-weight: 800; color: var(--text-white);">
+              巫冠呈
+            </div>
+            <div style="font-size: clamp(0.95rem, 1.3vw, 1.15rem); color: var(--text-sub); margin-top: 6px; line-height: 1.6;">
+              成功大學 航空太空工程學系 ＆ 雙主修資訊工程學系（大三）<br>
+              <span style="font-family: var(--font-mono); color: var(--accent-cyan);">學號：F44136211</span>
+            </div>
+          </div>
+
+          <div class="anim-4" style="margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <span class="hud-pill" style="color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.3);">PART 1: 潛在動作模型（LAM）</span>
+            <span class="hud-pill" style="color: var(--accent-purple); border-color: rgba(192, 132, 252, 0.3);">PART 2: 神盾盃 AI 空戰實測</span>
+            <span class="hud-pill" style="color: var(--accent-mint); border-color: rgba(52, 211, 153, 0.3);">PART 3: 實驗室工作站與本地 AI 助手</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 2: SPEAKER PROFILE
+         ========================================================= -->
+    <div class="slide" data-slide="1">
+      <div class="slide-wrapper">
+        <h2 class="anim-2">簡介：巫冠呈</h2>
+
+        <div class="profile-grid anim-3" style="margin-top: 20px;">
+          <!-- Left: Profile & Roles -->
+          <div class="card card-cyan">
+            <div class="card-title">背景與專題研究</div>
+            <ul class="key-points" style="gap: 14px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><span class="hud-pill">學系背景</span> 成功大學 航空太空工程學系（大三），雙主修資訊工程學系（資訊系）</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><span class="hud-pill">實驗室角色</span> 負責維護與管理 5923 實驗室工作站主機</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><span class="hud-pill">航太專題</span> 指導教授：張庭瑞 助理教授 ｜ 鑽研強化學習（RL）背後的 AI 技術，並應用於無人機控制</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><span class="hud-pill">資訊專題</span> 指導教授：連震杰 教授 ｜ 學習應用成熟深度學習工具與系統整合，產出實用功能</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Right: CSIE Robotics Showcase -->
+          <div class="card card-purple">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div class="card-title" style="margin-bottom: 0;">資訊專題：自主移動雙臂機器人</div>
+              <span class="hud-pill" style="color: var(--accent-purple); border-color: rgba(192, 132, 252, 0.4);">連震杰老師實驗室</span>
+            </div>
+            
+            <div class="profile-dual-media">
+              <div class="profile-media-item zoomable-wrap" data-full="assets/IMG20260831095615.jpg" alt="自主移動雙臂回收機器人硬體全貌">
+                <img src="assets/IMG20260831095615.jpg" alt="自主移動雙臂機器人硬體全貌">
+              </div>
+              <div class="profile-media-item zoomable-wrap" data-full="assets/garbage-classification-yolo_demo.gif" alt="機械臂端相機視覺 YOLO 辨識與抓取展示">
+                <img src="assets/garbage-classification-yolo_demo.gif" alt="機械臂端相機視覺 YOLO 辨識與抓取展示">
+              </div>
+            </div>
+
+            <ul class="key-points" style="gap: 8px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><span class="hud-pill">硬體配置</span> MSI 自走車底盤（AMR）、雙台達明 TM5S 機械手臂與夾爪</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><span class="hud-pill">實作內容</span> 移動導航底盤、手臂端相機 YOLO 目標辨識與自主垃圾分類夾取</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 3: CORE CHALLENGE: TRAJECTORIES WITHOUT ACTIONS
+         ========================================================= -->
+    <div class="slide" data-slide="2">
+      <div class="slide-wrapper">
+        <h2 class="anim-2">核心挑戰：海量時序軌跡，缺乏動作標籤</h2>
+
+        <div class="grid-2 anim-3" style="margin-top: 24px;">
+          <div class="card card-amber">
+            <div class="card-title text-amber">行為複製（BC）：受限於動作標籤</div>
+            <ul class="key-points" style="gap: 14px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>成對標籤依賴：</strong> 傳統模仿學習必須有成對的狀態與動作標籤 $(s_t, a_t)$，需同步記錄每毫秒的搖桿或舵面</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>網路影片無法直接使用：</strong> 網路上有數百萬小時的高品質航拍、空戰與遙測影片，但「只有畫面、沒有操縱數據」</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card card-cyan">
+            <div class="card-title text-cyan">傳統強化學習（RL）：難以借鑑網路先驗</div>
+            <ul class="key-points" style="gap: 14px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>應用廣泛但依賴從零摸索：</strong> RL 在無人機控制上非常成熟，但多數在模擬器中從零隨機試錯，探索成本高昂</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>無法利用無標籤資源：</strong> 面對現存海量的無標籤飛行影片，傳統 RL 無法直接吸收其中的人類專家飛行先驗</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="takeaway-bar anim-4" style="margin-top: 24px;">
+          <div style="font-size: var(--body-size); color: var(--text-white);">
+            <strong>核心動機：</strong>打破對標註數據與純隨機試錯的依賴，讓 AI 直接從海量無標籤的動態飛行影片中，自監督學會飛行控制先驗！
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 4: THE BREAKTHROUGH: LATENT ACTION MODELS (LAM)
+         ========================================================= -->
+    <div class="slide" data-slide="3">
+      <div class="slide-wrapper">
+        <h2 class="anim-2">關鍵概念：自監督潛在動作模型（LAM）</h2>
+
+        <div class="grid-2 anim-3" style="margin-top: 24px;">
+          <div class="card card-cyan">
+            <div class="card-title text-cyan">物體運動必有動態成因（Dynamics）</div>
+            <ul class="key-points" style="gap: 14px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>狀態位移反映控制量：</strong> 物理運動遵循動態方程式；無人機相鄰畫面 $(s_t, s_{t+1})$ 的像素特徵位移，必然源於機體施加的控制驅動力</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>逆動力學模型（IDM）：</strong> 比對相鄰狀態特徵差分，由神經網路逆向提煉出背後的抽象控制向量 $z$</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card card-purple">
+            <div class="card-title text-purple">前向世界模型驗證（FDM / World Model）</div>
+            <ul class="key-points" style="gap: 14px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>以未來預測檢驗真實驅動力：</strong> 前向模型（FDM）輸入 $(s_t, z)$ 預測 $\hat{s}_{t+1}$，只有預測準確，才證明向量 $z$ 真正掌握物理驅動力</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>擺脫特定載具舵面綁定：</strong> 向量 $z$ 代表的是畫面位移背後的空間機動意圖，不需預先指定副翼角度或馬達轉速</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="takeaway-bar anim-4" style="margin-top: 24px;">
+          <div style="font-size: var(--body-size); color: var(--text-white);">
+            <strong>解耦核心：</strong>將「特定載具的底層機械舵面」與「通用的空間機動戰術意圖 $z$」徹底拆開，讓大腦先學會高階走位！
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 5: INTUITIVE DRONE EXAMPLE (BASED ON GUAN-CHENG SKETCH)
+         ========================================================= -->
+    <!-- =========================================================
+         SLIDE 5: INTUITIVE DRONE EXAMPLE (MULTI-OBJECT INTERACTIVE)
+         ========================================================= -->
+    <div class="slide" data-slide="4">
+      <div class="slide-wrapper" style="max-width: 1240px; width: 96%;">
+        <h2 class="anim-2">直觀範例：以無人機為例</h2>
+
+        <!-- UAV Demo Grid: Left Camera/IDM, Right Latent Scatter Plot -->
+        <div class="uav-demo-grid anim-3">
+          <!-- Left: Camera Frame Sequence to IDM Latent Vectors -->
+          <div class="uav-camera-panel">
+            <div class="uav-panel-header">
+              <span>機載鏡頭時序 $\to$ IDM 動作向量提取</span>
+              <!-- Object Switcher Buttons -->
+              <div class="object-switcher">
+                <span style="font-size: 11.5px; color: var(--text-dim); margin-right: 2px;">地景（自動輪播）:</span>
+                <button class="obj-btn active" onclick="selectUavObject(0)">🌳 圓形樹</button>
+                <button class="obj-btn" onclick="selectUavObject(1)">🌲 三角松</button>
+                <button class="obj-btn" onclick="selectUavObject(2)">🏠 尖頂房</button>
+                <button class="obj-btn" onclick="selectUavObject(3)">🎈 熱氣球</button>
+              </div>
+            </div>
+
+            <!-- Row 1: 向右機動 -->
+            <div class="uav-motion-block">
+              <div class="uav-motion-top">
+                <span class="motion-tag tag-cyan">向右機動</span>
+                <span class="motion-subtitle">畫面特徵向左滑移 $\implies$ 自監督編碼為向右機動向量 $z_1$</span>
+              </div>
+              <div class="uav-motion-content">
+                <div class="frame-pair">
+                  <div class="frame-box">
+                    <svg class="tree-svg" viewBox="0 0 94 52">
+                      <defs>
+                        <linearGradient id="skyGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#082f49" />
+                          <stop offset="100%" stop-color="#0c4a6e" />
+                        </linearGradient>
+                        <clipPath id="skyClip1">
+                          <rect x="0" y="0" width="94" height="38" />
+                        </clipPath>
+                      </defs>
+                      <rect x="0" y="0" width="94" height="38" fill="url(#skyGrad1)" />
+                      <g clip-path="url(#skyClip1)">
+                        <g>
+                          <animateTransform attributeName="transform" type="translate" from="0 0" to="-94 0" dur="10s" repeatCount="indefinite" />
+                          <ellipse cx="25" cy="10" rx="9" ry="3" fill="rgba(255,255,255,0.22)" />
+                          <circle cx="28" cy="8" r="3.5" fill="rgba(255,255,255,0.25)" />
+                          <ellipse cx="72" cy="15" rx="8" ry="2.6" fill="rgba(255,255,255,0.18)" />
+                          <ellipse cx="119" cy="10" rx="9" ry="3" fill="rgba(255,255,255,0.22)" />
+                          <circle cx="122" cy="8" r="3.5" fill="rgba(255,255,255,0.25)" />
+                          <ellipse cx="166" cy="15" rx="8" ry="2.6" fill="rgba(255,255,255,0.18)" />
+                        </g>
+                      </g>
+                      <rect x="0" y="38" width="94" height="14" fill="#14532d" />
+                      <line x1="0" y1="38" x2="94" y2="38" stroke="#22c55e" stroke-width="1.2" />
+                      <!-- Obj 0: Round tree centered -->
+                      <g class="uav-obj-0"><rect x="45" y="24" width="5" height="15" fill="#78350f" rx="1"/><circle cx="47" cy="20" r="11" fill="#16a34a"/><circle cx="45" cy="18" r="3.5" fill="#4ade80"/></g>
+                      <!-- Obj 1: Pine tree centered -->
+                      <g class="uav-obj-1" style="display:none;"><rect x="45" y="26" width="5" height="13" fill="#78350f" rx="1"/><polygon points="47,9 34,28 60,28" fill="#059669"/><polygon points="47,15 38,26 56,26" fill="#10b981"/></g>
+                      <!-- Obj 2: House centered -->
+                      <g class="uav-obj-2" style="display:none;"><polygon points="47,10 32,23 62,23" fill="#dc2626"/><rect x="34" y="23" width="26" height="15" fill="#f1f5f9"/><rect x="44" y="29" width="7" height="9" fill="#92400e"/><rect x="52" y="26" width="5" height="5" fill="#38bdf8"/></g>
+                      <!-- Obj 3: Balloon centered -->
+                      <g class="uav-obj-3" style="display:none;"><rect x="45" y="31" width="5" height="5" fill="#78350f"/><line x1="44" y1="25" x2="45" y2="31" stroke="#cbd5e1" stroke-width="0.9"/><line x1="51" y1="25" x2="50" y2="31" stroke="#cbd5e1" stroke-width="0.9"/><ellipse cx="47" cy="16" rx="10" ry="12" fill="#f59e0b"/><ellipse cx="47" cy="16" rx="4" ry="12" fill="#ef4444"/></g>
+                    </svg>
+                    <div class="frame-caption">$s_t$</div>
+                  </div>
+                  <div class="idm-arrow-box">
+                    <span>$\xrightarrow{\text{IDM}}$</span>
+                  </div>
+                  <div class="frame-box active-cyan">
+                    <svg class="tree-svg" viewBox="0 0 94 52">
+                      <defs>
+                        <clipPath id="skyClip2">
+                          <rect x="0" y="0" width="94" height="38" />
+                        </clipPath>
+                      </defs>
+                      <rect x="0" y="0" width="94" height="38" fill="url(#skyGrad1)" />
+                      <g clip-path="url(#skyClip2)">
+                        <g>
+                          <animateTransform attributeName="transform" type="translate" from="0 0" to="-94 0" dur="10s" repeatCount="indefinite" />
+                          <ellipse cx="25" cy="10" rx="9" ry="3" fill="rgba(255,255,255,0.22)" />
+                          <circle cx="28" cy="8" r="3.5" fill="rgba(255,255,255,0.25)" />
+                          <ellipse cx="72" cy="15" rx="8" ry="2.6" fill="rgba(255,255,255,0.18)" />
+                          <ellipse cx="119" cy="10" rx="9" ry="3" fill="rgba(255,255,255,0.22)" />
+                          <circle cx="122" cy="8" r="3.5" fill="rgba(255,255,255,0.25)" />
+                          <ellipse cx="166" cy="15" rx="8" ry="2.6" fill="rgba(255,255,255,0.18)" />
+                        </g>
+                      </g>
+                      <rect x="0" y="38" width="94" height="14" fill="#14532d" />
+                      <line x1="0" y1="38" x2="94" y2="38" stroke="#22c55e" stroke-width="1.2" />
+                      <!-- Obj 0: Round tree shifted left -->
+                      <g class="uav-obj-0"><rect x="22" y="24" width="5" height="15" fill="#78350f" rx="1"/><circle cx="24" cy="20" r="11" fill="#16a34a"/><circle cx="22" cy="18" r="3.5" fill="#4ade80"/></g>
+                      <!-- Obj 1: Pine tree shifted left -->
+                      <g class="uav-obj-1" style="display:none;"><rect x="22" y="26" width="5" height="13" fill="#78350f" rx="1"/><polygon points="24,9 11,28 37,28" fill="#059669"/><polygon points="24,15 15,26 33,26" fill="#10b981"/></g>
+                      <!-- Obj 2: House shifted left -->
+                      <g class="uav-obj-2" style="display:none;"><polygon points="24,10 9,23 39,23" fill="#dc2626"/><rect x="11" y="23" width="26" height="15" fill="#f1f5f9"/><rect x="21" y="29" width="7" height="9" fill="#92400e"/><rect x="29" y="26" width="5" height="5" fill="#38bdf8"/></g>
+                      <!-- Obj 3: Balloon shifted left -->
+                      <g class="uav-obj-3" style="display:none;"><rect x="22" y="31" width="5" height="5" fill="#78350f"/><line x1="21" y1="25" x2="22" y2="31" stroke="#cbd5e1" stroke-width="0.9"/><line x1="28" y1="25" x2="27" y2="31" stroke="#cbd5e1" stroke-width="0.9"/><ellipse cx="24" cy="16" rx="10" ry="12" fill="#f59e0b"/><ellipse cx="24" cy="16" rx="4" ry="12" fill="#ef4444"/></g>
+                    </svg>
+                    <div class="frame-caption" style="color: var(--accent-cyan);">$s_{t+1}$</div>
+                  </div>
+                </div>
+                <div class="vector-result-box box-cyan">
+                  <div id="uavFormulaRight" class="vector-formula text-cyan">$z_1 = [0.12,\, 0.85,\, 0.01,\, \dots] \in \mathbb{R}^{128}$</div>
+                  <div class="vector-desc">空間特徵差分 $\implies$ 提煉 128 維動作向量</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: 向左機動 -->
+            <div class="uav-motion-block">
+              <div class="uav-motion-top">
+                <span class="motion-tag tag-purple">向左機動</span>
+                <span class="motion-subtitle">畫面特徵向右滑移 $\implies$ 自監督編碼為向左機動向量 $z_2$</span>
+              </div>
+              <div class="uav-motion-content">
+                <div class="frame-pair">
+                  <div class="frame-box">
+                    <svg class="tree-svg" viewBox="0 0 94 52">
+                      <defs>
+                        <clipPath id="skyClip3">
+                          <rect x="0" y="0" width="94" height="38" />
+                        </clipPath>
+                      </defs>
+                      <rect x="0" y="0" width="94" height="38" fill="url(#skyGrad1)" />
+                      <g clip-path="url(#skyClip3)">
+                        <g>
+                          <animateTransform attributeName="transform" type="translate" from="0 0" to="-94 0" dur="10s" repeatCount="indefinite" />
+                          <ellipse cx="25" cy="10" rx="9" ry="3" fill="rgba(255,255,255,0.22)" />
+                          <circle cx="28" cy="8" r="3.5" fill="rgba(255,255,255,0.25)" />
+                          <ellipse cx="72" cy="15" rx="8" ry="2.6" fill="rgba(255,255,255,0.18)" />
+                          <ellipse cx="119" cy="10" rx="9" ry="3" fill="rgba(255,255,255,0.22)" />
+                          <circle cx="122" cy="8" r="3.5" fill="rgba(255,255,255,0.25)" />
+                          <ellipse cx="166" cy="15" rx="8" ry="2.6" fill="rgba(255,255,255,0.18)" />
+                        </g>
+                      </g>
+                      <rect x="0" y="38" width="94" height="14" fill="#14532d" />
+                      <line x1="0" y1="38" x2="94" y2="38" stroke="#22c55e" stroke-width="1.2" />
+                      <!-- Obj 0: Round tree centered -->
+                      <g class="uav-obj-0"><rect x="45" y="24" width="5" height="15" fill="#78350f" rx="1"/><circle cx="47" cy="20" r="11" fill="#16a34a"/><circle cx="45" cy="18" r="3.5" fill="#4ade80"/></g>
+                      <!-- Obj 1: Pine tree centered -->
+                      <g class="uav-obj-1" style="display:none;"><rect x="45" y="26" width="5" height="13" fill="#78350f" rx="1"/><polygon points="47,9 34,28 60,28" fill="#059669"/><polygon points="47,15 38,26 56,26" fill="#10b981"/></g>
+                      <!-- Obj 2: House centered -->
+                      <g class="uav-obj-2" style="display:none;"><polygon points="47,10 32,23 62,23" fill="#dc2626"/><rect x="34" y="23" width="26" height="15" fill="#f1f5f9"/><rect x="44" y="29" width="7" height="9" fill="#92400e"/><rect x="52" y="26" width="5" height="5" fill="#38bdf8"/></g>
+                      <!-- Obj 3: Balloon centered -->
+                      <g class="uav-obj-3" style="display:none;"><rect x="45" y="31" width="5" height="5" fill="#78350f"/><line x1="44" y1="25" x2="45" y2="31" stroke="#cbd5e1" stroke-width="0.9"/><line x1="51" y1="25" x2="50" y2="31" stroke="#cbd5e1" stroke-width="0.9"/><ellipse cx="47" cy="16" rx="10" ry="12" fill="#f59e0b"/><ellipse cx="47" cy="16" rx="4" ry="12" fill="#ef4444"/></g>
+                    </svg>
+                    <div class="frame-caption">$s_t$</div>
+                  </div>
+                  <div class="idm-arrow-box" style="color: var(--accent-purple);">
+                    <span>$\xrightarrow{\text{IDM}}$</span>
+                  </div>
+                  <div class="frame-box active-purple">
+                    <svg class="tree-svg" viewBox="0 0 94 52">
+                      <defs>
+                        <clipPath id="skyClip4">
+                          <rect x="0" y="0" width="94" height="38" />
+                        </clipPath>
+                      </defs>
+                      <rect x="0" y="0" width="94" height="38" fill="url(#skyGrad1)" />
+                      <g clip-path="url(#skyClip4)">
+                        <g>
+                          <animateTransform attributeName="transform" type="translate" from="0 0" to="-94 0" dur="10s" repeatCount="indefinite" />
+                          <ellipse cx="25" cy="10" rx="9" ry="3" fill="rgba(255,255,255,0.22)" />
+                          <circle cx="28" cy="8" r="3.5" fill="rgba(255,255,255,0.25)" />
+                          <ellipse cx="72" cy="15" rx="8" ry="2.6" fill="rgba(255,255,255,0.18)" />
+                          <ellipse cx="119" cy="10" rx="9" ry="3" fill="rgba(255,255,255,0.22)" />
+                          <circle cx="122" cy="8" r="3.5" fill="rgba(255,255,255,0.25)" />
+                          <ellipse cx="166" cy="15" rx="8" ry="2.6" fill="rgba(255,255,255,0.18)" />
+                        </g>
+                      </g>
+                      <rect x="0" y="38" width="94" height="14" fill="#14532d" />
+                      <line x1="0" y1="38" x2="94" y2="38" stroke="#22c55e" stroke-width="1.2" />
+                      <!-- Obj 0: Round tree shifted right -->
+                      <g class="uav-obj-0"><rect x="68" y="24" width="5" height="15" fill="#78350f" rx="1"/><circle cx="70" cy="20" r="11" fill="#16a34a"/><circle cx="68" cy="18" r="3.5" fill="#4ade80"/></g>
+                      <!-- Obj 1: Pine tree shifted right -->
+                      <g class="uav-obj-1" style="display:none;"><rect x="68" y="26" width="5" height="13" fill="#78350f" rx="1"/><polygon points="70,9 57,28 83,28" fill="#059669"/><polygon points="70,15 61,26 79,26" fill="#10b981"/></g>
+                      <!-- Obj 2: House shifted right -->
+                      <g class="uav-obj-2" style="display:none;"><polygon points="70,10 55,23 85,23" fill="#dc2626"/><rect x="57" y="23" width="26" height="15" fill="#f1f5f9"/><rect x="67" y="29" width="7" height="9" fill="#92400e"/><rect x="75" y="26" width="5" height="5" fill="#38bdf8"/></g>
+                      <!-- Obj 3: Balloon shifted right -->
+                      <g class="uav-obj-3" style="display:none;"><rect x="68" y="31" width="5" height="5" fill="#78350f"/><line x1="67" y1="25" x2="68" y2="31" stroke="#cbd5e1" stroke-width="0.9"/><line x1="74" y1="25" x2="73" y2="31" stroke="#cbd5e1" stroke-width="0.9"/><ellipse cx="70" cy="16" rx="10" ry="12" fill="#f59e0b"/><ellipse cx="70" cy="16" rx="4" ry="12" fill="#ef4444"/></g>
+                    </svg>
+                    <div class="frame-caption" style="color: var(--accent-purple);">$s_{t+1}$</div>
+                  </div>
+                </div>
+                <div class="vector-result-box box-purple">
+                  <div id="uavFormulaLeft" class="vector-formula text-purple">$z_2 = [0.91,\, 0.42,\, 0.05,\, \dots] \in \mathbb{R}^{128}$</div>
+                  <div class="vector-desc">空間特徵差分 $\implies$ 提煉 128 維動作向量</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Latent Space 2D Scatter Plot -->
+          <div class="uav-latent-panel" id="uavLatentPanel">
+            <div class="uav-panel-header" style="justify-content: flex-start;">
+              <span style="white-space: nowrap;">隱動作空間聚類（2D 投影）</span>
+            </div>
+            <div class="latent-plot-container">
+              <svg class="latent-svg" viewBox="0 0 380 180" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="axisArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+                  </marker>
+                </defs>
+                <!-- Coordinate Axes -->
+                <line x1="32" y1="150" x2="360" y2="150" stroke="#475569" stroke-width="1.5" marker-end="url(#axisArrow)" />
+                <line x1="32" y1="150" x2="32" y2="20" stroke="#475569" stroke-width="1.5" marker-end="url(#axisArrow)" />
+                <text x="360" y="168" fill="#cbd5e1" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" text-anchor="end">z[0]</text>
+                <text x="32" y="12" fill="#cbd5e1" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" text-anchor="middle">z[1]</text>
+
+                <!-- Cluster 1: 向右機動 (Cyan) Low Dim 1 (~0.12), High Dim 2 (~0.85) -> Top Left -->
+                <ellipse id="cyanClusterEllipse" class="cluster-shape" cx="110" cy="58" rx="46" ry="32" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,3" />
+                <circle id="cyan-dot-0" class="latent-point cyan-pt active-dot" cx="105" cy="55" r="4.5" fill="#94a3b8" />
+                <circle id="cyan-dot-1" class="latent-point cyan-pt" cx="122" cy="64" r="3.5" fill="#94a3b8" />
+                <circle id="cyan-dot-2" class="latent-point cyan-pt" cx="92" cy="48" r="3.5" fill="#94a3b8" />
+                <circle id="cyan-dot-3" class="latent-point cyan-pt" cx="115" cy="42" r="3.5" fill="#94a3b8" />
+                <circle class="latent-point cyan-pt" cx="95" cy="68" r="2.5" fill="#94a3b8" opacity="0.6" />
+                <circle class="latent-point cyan-pt" cx="82" cy="58" r="2.5" fill="#94a3b8" opacity="0.6" />
+                <text id="cyanClusterLabel" class="cluster-text" x="110" y="22" fill="#38bdf8" font-family="'Inter', sans-serif" font-size="13" font-weight="700" text-anchor="middle">向右機動群 (z₁)</text>
+
+                <!-- Cluster 2: 向左機動 (Purple) High Dim 1 (~0.91), Lower Dim 2 (~0.42) -> Bottom Right -->
+                <ellipse id="purpleClusterEllipse" class="cluster-shape" cx="270" cy="105" rx="48" ry="32" fill="rgba(192,132,252,0.12)" stroke="#c084fc" stroke-width="1.5" stroke-dasharray="3,3" />
+                <circle id="purple-dot-0" class="latent-point purple-pt active-dot" cx="270" cy="105" r="4.5" fill="#94a3b8" />
+                <circle id="purple-dot-1" class="latent-point purple-pt" cx="252" cy="95" r="3.5" fill="#94a3b8" />
+                <circle id="purple-dot-2" class="latent-point purple-pt" cx="288" cy="114" r="3.5" fill="#94a3b8" />
+                <circle id="purple-dot-3" class="latent-point purple-pt" cx="278" cy="90" r="3.5" fill="#94a3b8" />
+                <circle class="latent-point purple-pt" cx="258" cy="118" r="2.5" fill="#94a3b8" opacity="0.6" />
+                <circle class="latent-point purple-pt" cx="245" cy="106" r="2.5" fill="#94a3b8" opacity="0.6" />
+                <text id="purpleClusterLabel" class="cluster-text" x="270" y="148" fill="#c084fc" font-family="'Inter', sans-serif" font-size="13" font-weight="700" text-anchor="middle">向左機動群 (z₂)</text>
+
+                <!-- Pulsing Radar Target Lock Beacons (Moves with Active Object) -->
+                <circle id="cyanBeaconRing" cx="105" cy="55" r="12" fill="none" stroke="#38bdf8" stroke-width="2" class="beacon-pulse" />
+                <circle id="cyanBeaconDot" cx="105" cy="55" r="4.5" fill="#ffffff" stroke="#38bdf8" stroke-width="2" class="beacon-dot" />
+
+                <circle id="purpleBeaconRing" cx="270" cy="105" r="12" fill="none" stroke="#c084fc" stroke-width="2" class="beacon-pulse" />
+                <circle id="purpleBeaconDot" cx="270" cy="105" r="4.5" fill="#ffffff" stroke="#c084fc" stroke-width="2" class="beacon-dot" />
+
+                <!-- Policy Decision Box -->
+                <rect x="155" y="8" width="205" height="26" rx="5" fill="#1c1917" stroke="#f59e0b" stroke-width="1.2" />
+                <text x="257" y="25" fill="#fbbf24" font-family="'Inter', sans-serif" font-size="12" font-weight="700" text-anchor="middle">前方有障礙 ➔ 策略輸出 z₁ 群</text>
+              </svg>
+            </div>
+            <div class="uav-insight-cue">
+              💡 <strong>為什麼是分佈點團而非單點？</strong> 天空背景（雲朵飄移）與不同地景的微小差異會讓向量產生微小偏移；但在 Stage 3 分群下，模型能自動過濾背景擾動，精準鎖定核心動作！
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Interactive Stage Cards (Click to Inspect Detailed Architecture) -->
+        <div class="grid-3 anim-4" style="gap: 16px; margin-top: 8px;">
+          <div class="card card-cyan stage-card-interactive" onclick="openStageModal(1)">
+            <div class="card-title text-cyan" style="font-size: 16px;">Stage 1：自監督提煉動作字典</div>
+            <p style="font-size: 14.5px; color: var(--text-sub); line-height: 1.5; margin-top: 6px;">
+              從無標籤時序中，IDM 依據相鄰影像特徵位移提煉向量 $z$，世界模型以未來預測驗證真實驅動力。
+            </p>
+          </div>
+
+          <div class="card card-purple stage-card-interactive" onclick="openStageModal(2)">
+            <div class="card-title text-purple" style="font-size: 16px;">Stage 2：隱空間戰術決策</div>
+            <p style="font-size: 14.5px; color: var(--text-sub); line-height: 1.5; margin-top: 6px;">
+              策略網路在隱空間學習戰術走位：看到障礙物時輸出向右繞行群向量 $z$，完全與實體舵面解耦。
+            </p>
+          </div>
+
+          <div class="card card-mint stage-card-interactive" onclick="openStageModal(3)">
+            <div class="card-title text-mint" style="font-size: 16px;">Stage 3：極少樣本對齊落地</div>
+            <p style="font-size: 14.5px; color: var(--text-sub); line-height: 1.5; margin-top: 6px;">
+              僅需數千步少量真實航測遙測數據，訓練微型解碼器將向量 $z$ 翻譯為特定載具的實體舵面或電機指令。
+            </p>
+          </div>
+        </div>
+
+        <div class="takeaway-bar anim-4" style="margin-top: 12px; padding: 12px 20px;">
+          <div style="font-size: 15px; color: var(--text-white); line-height: 1.5;">
+            <strong>核心邏輯：</strong>在無標籤下自長動作字典 $\implies$ 在隱空間學走位決策 $\implies$ 用極少量樣本對齊實體載具
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 6: BIGFISH EXPERIMENTAL RESULTS & PCA
+         ========================================================= -->
+    <div class="slide" data-slide="5">
+      <div class="slide-wrapper">
+        <div class="hud-tag anim-1">[ EXPERIMENTAL PROOF // 實測結果 ]</div>
+        <h2 class="anim-2">實測驗證：BigFish 真實動作空間分群</h2>
+        <p class="subtitle anim-2">實驗室工作站實機運行成果 ｜ 完全無按鍵標註下，128 維空間自然依照物理動作聚類</p>
+
+        <div class="bigfish-showcase anim-3">
+          <!-- Arcade Gameplay Screen -->
+          <div class="arcade-box">
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan); letter-spacing: 1px; margin-bottom: 8px;">
+              [ ENV // PROCGEN BIGFISH ]
+            </div>
+            <div class="arcade-screen zoomable-wrap" data-full="assets/rollout_decoded.gif" alt="Procgen BigFish 實機解碼遊玩畫面">
+              <img src="assets/rollout_decoded.gif" alt="Procgen BigFish 實機解碼遊玩畫面">
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted); margin-top: 8px; text-align: center; line-height: 1.45;">
+              <strong>遊戲規則：</strong>控制綠色小魚吃小魚變大、閃避大魚避免被吃<br>Stage 3 解碼實玩：平均得分 11.93（隨機探索僅 0.87）
+            </div>
+          </div>
+
+          <!-- Real PCA Scatter Plot Card -->
+          <div class="pca-figure-card">
+            <div class="pca-figure-wrap zoomable-wrap" data-full="assets/latent_z_pca.png" alt="BigFish 潛在動作空間 128 維 PCA 主成分投影散佈圖">
+              <img src="assets/latent_z_pca.png" alt="BigFish 潛在動作空間 128 維 PCA 投影散佈圖">
+            </div>
+
+            <div style="flex: 1;">
+              <div style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 10px;">
+                真實特徵聚類解析
+              </div>
+              <ul class="key-points" style="gap: 11px;">
+                <li>
+                  <span class="bullet">▹</span>
+                  <span class="content"><strong>無標籤自監督：</strong> 完全不輸入鍵盤按鈕，AI 自己從專家時序畫面中提取出底層動作</span>
+                </li>
+                <li>
+                  <span class="bullet">▹</span>
+                  <span class="content"><strong>物理幾何對齊：</strong> 左右游動主導橫向主軸，上下游動主導縱向主軸，語意高度對齊</span>
+                </li>
+                <li>
+                  <span class="bullet">▹</span>
+                  <span class="content"><strong>NOOP 獨立分群：</strong> 在靜止不操作時，背景其他魚仍在游動，因此「靜止」也具有獨特動態特徵，在圖中自然形成獨立的紫色 NOOP 聚類群！</span>
+                </li>
+                <li>
+                  <span class="bullet">▹</span>
+                  <span class="content"><strong>Few-shot 快速落地：</strong> 僅需約 8,000 個對照樣本，微型解碼器即突破 ~70% 動作準確率</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="takeaway-bar anim-4">
+          <div style="font-size: var(--body-size); color: var(--text-white);">
+            <strong>核心實證：</strong>AI 不需要人工預先給予動作標籤，就能自主從時序動態變化中提煉出底層動作結構
+          </div>
+          <span class="hud-pill" style="color: var(--accent-mint); border-color: rgba(52, 211, 153, 0.4);">FEW-SHOT VERIFIED</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 7: SHENDUN CUP ARENA & CHALLENGES (CONTESTANT PERSPECTIVE)
+         ========================================================= -->
+    <div class="slide" data-slide="6">
+      <div class="slide-wrapper" style="max-width: 1240px; width: 96%;">
+        <div class="hud-tag anim-1">[ NATIONAL ARENA // 參賽視角剖析 ]</div>
+        <h2 class="anim-2">神盾盃 AI 空戰：比賽形式與對抗儀表</h2>
+        <p class="subtitle anim-2">1v1 視距內空戰纏鬥（BFM） ｜ 官方即時對抗系統儀表 ＆ 競賽規格簡介</p>
+
+        <div class="grid-2 anim-3" style="align-items: stretch; gap: 20px;">
+          <!-- Left: Official Competition HUD Dashboard Screen -->
+          <div class="card card-cyan" style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div class="card-title text-cyan" style="margin-bottom: 0;">比賽官方即時對抗系統儀表畫面</div>
+              <span class="hud-pill" style="color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.4);">大會正式規格</span>
+            </div>
+            
+            <div class="zoomable-wrap" data-full="assets/shendun_arch.png" alt="國防部神盾盃官方即時對抗系統儀表畫面" style="border-radius: 8px; overflow: hidden; border: 1px solid rgba(56, 189, 248, 0.4); margin-bottom: 10px; cursor: pointer; background: #060e18;">
+              <img src="assets/shendun_arch.png" alt="國防部神盾盃官方即時對抗系統儀表畫面" style="width: 100%; display: block; border-radius: 6px;">
+            </div>
+
+            <ul class="key-points" style="gap: 7px; font-size: 13.5px; margin-top: auto;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>紅藍雙機 3D 纏鬥軌跡：</strong> 追蹤咬尾態勢與武器攻擊區（WEZ），鎖定累積 3 秒即獲勝</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>即時評判面板：</strong> 顯示作戰優勢、血量、攻擊角度與「超 G 秒數」扣分</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>4 維連續舵面輸出：</strong> 油門推力（Throttle）、副翼（Roll）、升降舵（Pitch）、方向舵（Yaw）</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Right: Tournament Format & The Three Challenges -->
+          <div class="card card-purple" style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div class="card-title text-purple" style="margin-bottom: 0;">賽制規格與競賽要求</div>
+              <img src="assets/shendun_logo.png" alt="神盾盃徽章" style="width: 26px; height: 26px; object-fit: contain;">
+            </div>
+
+            <ul class="key-points" style="gap: 11px; font-size: 13.5px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>成大主場決賽：</strong> 11 月於成大國際會議廳舉行，每隊 2~4 人同台競技</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>勝負評判機制：</strong> 進入武器攻擊區（WEZ）咬尾鎖定累積 3 秒即勝；平手時依優勢秒數與過載扣分評判</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>60Hz UDP 硬即時約束：</strong> 通訊採 60Hz UDP，推論延遲必須嚴格 $\le 16.6\text{ms}$，超時判罰</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>氣動過載與失速邊界：</strong> 需遵守過載限制（超 G 會被扣分），且需維持空速避免失速墜海</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="takeaway-bar anim-4" style="margin-top: 14px;">
+          <div style="font-size: var(--body-size); color: var(--text-white);">
+            <strong>競賽定位：</strong>在真實 F-16 氣動約束與 60Hz 即時通信下，考驗高動態空戰博弈與控制能力
+          </div>
+          <span class="hud-pill" style="color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.4);">DOGFIGHT ARENA</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 8: OFFICIAL BASELINE ANALYSIS (STRENGTHS & LIMITATIONS)
+         ========================================================= -->
+    <div class="slide" data-slide="7">
+      <div class="slide-wrapper">
+        <div class="hud-tag anim-1">[ BASELINE ANALYSIS // 官方模型實測 ]</div>
+        <h2 class="anim-2">官方 Baseline 實測剖析與三大改進方向</h2>
+        <p class="subtitle anim-2">官方 3.14 億步 SAC 模型缺陷 ｜ 結合切換控制、PFSP 對手池與 LAM 意圖增廣</p>
+
+        <div class="grid-2 anim-3">
+          <div class="card card-amber">
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-amber); letter-spacing: 1px; margin-bottom: 8px;">[ BASELINE LIMITATIONS ]</div>
+            <div class="card-title text-amber">官方 Baseline 實測剖析與實戰挑戰</div>
+            <ul class="key-points" style="gap: 12px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>訓練對手單一（只遇過飛直線的靶機）：</strong> 反編譯訓練日誌顯示其環境為「Level 1 敵機走直線」（<code>敵機直線_v2</code>），未見過防禦規避對手，策略退化為固定半徑水平盤旋</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>方向舵鎖死且缺乏動態時序：</strong> 舵面被鎖死為 0（純 3-DOF），且只吃當下瞬時 20 維數值，無法感知對手角速度與 G 力趨勢</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>末端瞄準抖動與低空俯衝風險：</strong> 純 RL 在小視角下微操抖動，難以達成 2 度內持鎖 3 秒；且急迫追擊時容易低空俯衝改出不及撞地</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card card-cyan">
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan); letter-spacing: 1px; margin-bottom: 8px;">[ CLEAR IMPROVEMENT ROADMAP ]</div>
+            <div class="card-title text-cyan">三大改進突破方向（神盾盃優化藍圖）</div>
+            <ul class="key-points" style="gap: 11px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>1. 階層式切換控制（Switching Control）：</strong> 大範圍戰術走位由 RL 負責；進入攻擊區切換專用瞄準控制律（吸住目標），低空危急切換生存保底模式</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>2. 動態對手池與 PFSP 加權採樣：</strong> 引入 SECA 規則專家與歷史策略，採用 DeepMind 優先級虛構對弈（PFSP）加權抽樣苦手對手，打破單調自對弈</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>3. LAM 時序意圖增廣（20D $\to$ 28D）：</strong> 用相鄰幀差分推算敵機未來的角速度與機動意圖 $\hat{z}$，解決只吃當下瞬時狀態的盲區</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="takeaway-bar anim-4" style="margin-top: 14px;">
+          <div style="font-size: var(--body-size); color: var(--text-white);">
+            <strong>核心思路：</strong>結合階層切換控制、PFSP 對手池打破單調資料，並以 LAM 提取對手時序意圖，全面突破官方模型之局限。
+          </div>
+          <span class="hud-pill" style="color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.4);">UPGRADE ROADMAP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 9: INFRASTRUCTURE & LOCAL AI ASSISTANT (CLEANED)
+         ========================================================= -->
+    <div class="slide" data-slide="8">
+      <div class="slide-wrapper">
+        <div class="hud-tag anim-1">[ INFRASTRUCTURE // 實驗室工具 ]</div>
+        <h2 class="anim-2">實驗室算力資源與 Local AI 助手</h2>
+        <p class="subtitle anim-2">實驗室工作站 ｜ 輔助文獻閱讀、代碼編程與實驗室知識庫查詢</p>
+
+        <div class="grid-2 anim-3">
+          <div class="card card-purple">
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-purple); letter-spacing: 1px; margin-bottom: 8px;">[ PRIVACY & PAPER READING ]</div>
+            <div class="card-title text-purple">本地私密性與長文獻支援</div>
+            <ul class="key-points" style="gap: 12px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>100% 私有安全：</strong> 論文草稿、未發表實驗數據與研究代碼完全保留在實驗室本地，絕不上傳外部雲端</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>長文本論文研讀：</strong> 支援直接上傳 20+ 頁完整英文 PDF 論文，快速梳理研究架構、方法論與核心結論</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>複雜公式解析：</strong> 針對控制理論、強化學習複雜數學符號提供清晰解說與架構對照</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card card-cyan">
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan); letter-spacing: 1px; margin-bottom: 8px;">[ DUAL TOOLCHAINS & KNOWLEDGE ]</div>
+            <div class="card-title text-cyan">雙工具鏈支援與知識庫</div>
+            <ul class="key-points" style="gap: 12px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>Open WebUI（網頁介面）：</strong> 免安裝任何軟體，瀏覽器開啟即可進行論文研讀、文獻對話與實驗交流</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>OpenCode（終端介面）：</strong> 終端機輸入 <code style="color: var(--accent-mint); font-family: var(--font-mono);">opencode</code>，協助代碼審閱、快速除錯與編寫腳本</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>實驗室知識庫同步：</strong> 自動索引伺服器連線指南、環境設定與競賽規範，免去重複翻找文件</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="takeaway-bar anim-4" style="margin-top: 14px;">
+          <div style="font-size: var(--body-size); color: var(--text-white);">
+            <strong>資源定位：</strong>為全體實驗室成員提供私有、安全且便捷的日常研究助手，加速論文閱讀與代碼開發
+          </div>
+          <span class="hud-pill" style="color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.4);">LAB HELPER</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 10: LOCAL AI ACCESS & GUIDANCE (CLEANED)
+         ========================================================= -->
+    <div class="slide" data-slide="9">
+      <div class="slide-wrapper">
+        <div class="hud-tag anim-1">[ ACCESS & GUIDANCE // 存取體驗 ]</div>
+        <h2 class="anim-2">Local AI 助手存取體驗</h2>
+        <p class="subtitle anim-2">校內直連 http://140.116.202.73:3000 ｜ 請連接學校網路使用（請勿使用手機行動網路）</p>
+
+        <div class="grid-2 anim-3">
+          <!-- Left: Local AI WebUI QR & Direct Access -->
+          <div class="card card-cyan" style="display: flex; flex-direction: column; justify-content: space-between; padding: 22px 24px;">
+            <div style="text-align: center;">
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan); letter-spacing: 1.5px; margin-bottom: 4px;">[ SCAN OR CLICK TO ACCESS ]</div>
+              <div style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--text-white);">
+                Local AI 網頁直連體驗
+              </div>
+            </div>
+
+            <div class="qr-box zoomable-wrap" data-full="assets/local_ai_qr.png" alt="本地 AI 知識庫直連網址 QR Code" style="margin: 6px auto 10px auto; width: 165px; height: 165px;">
+              <img src="assets/local_ai_qr.png" alt="本地 AI 直連 QR Code">
+            </div>
+
+            <div style="text-align: center;">
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan); letter-spacing: 1px; margin-bottom: 3px;">
+                校內直連伺服器位址 (URL)
+              </div>
+              <a href="http://140.116.202.73:3000" target="_blank" style="font-family: var(--font-mono); font-size: 1.22rem; font-weight: 800; color: var(--accent-cyan); text-decoration: none; display: inline-block; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);">
+                http://140.116.202.73:3000
+              </a>
+              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                點擊或掃描即可開啟對話介面
+              </div>
+            </div>
+
+            <div style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid var(--accent-amber); padding: 10px 12px; border-radius: 0 6px 6px 0; margin-top: 8px;">
+              <div style="font-size: 12.5px; color: #fde68a; font-weight: 700; margin-bottom: 2px;">
+                ⚠️ 連線注意事項：
+              </div>
+              <div style="font-size: 12px; color: var(--text-sub); line-height: 1.45;">
+                請務必連接<strong>學校網路（成大校園 Wi-Fi / 實驗室網路）</strong>才能順利連線；請<strong>勿使用手機行動網路（4G/5G）</strong>，以免無法連入校內 IP。
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Practical Guidance & Prompts -->
+          <div class="card card-mint">
+            <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-mint); letter-spacing: 1px; margin-bottom: 8px;">[ PRACTICAL PROMPTS ]</div>
+            <div class="card-title text-mint">實用功能與提問指南</div>
+            <ul class="key-points" style="gap: 12px; margin-top: 10px;">
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>文獻閱讀提問：</strong> 「請幫我條列這篇論文的核心創新點與實驗設計架構。」</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>控制理論推導：</strong> 「請解釋這段逆向動力學模型與世界模型相互約束的物理機制。」</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>代碼除錯輔助：</strong> 「這段強化學習自定義環境 reset 代碼出現維度不匹配，請幫忙除錯。」</span>
+              </li>
+              <li>
+                <span class="bullet">▹</span>
+                <span class="content"><strong>實驗室知識查詢：</strong> 「如何連上實驗室工作站環境並執行基本指令？」</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="takeaway-bar anim-4" style="margin-top: 14px;">
+          <div style="font-size: var(--body-size); color: var(--text-white);">
+            <strong>使用說明：</strong>連接成大校園網路即可直接掃描體驗，支援長文本文獻研讀、控制理論解析與程式除錯。
+          </div>
+          <span class="hud-pill" style="color: var(--accent-mint); border-color: rgba(52, 211, 153, 0.4);">READY TO USE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         SLIDE 11: THANK YOU PAGE
+         ========================================================= -->
+    <div class="slide" data-slide="10">
+      <div class="slide-wrapper">
+        <div class="thankyou-container anim-2">
+          <div class="thankyou-title">Thank You</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Stage Detail Modal Overlay -->
+  <div class="stage-modal-overlay" id="stageModal">
+    <div class="stage-modal-content">
+      <button class="stage-modal-close" onclick="closeStageModal()" title="關閉視窗 (Esc)">✕</button>
+      <div id="stageModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Hidden Templates for Stage Modals -->
+  <div style="display:none;">
+    <!-- Stage 1 Template -->
+    <div id="modalContentStage1">
+      <div style="font-family: var(--font-display); font-size: 1.55rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 8px;">
+        Stage 1 原理：IDM 逆動力學 ＋ FDM 前向世界模型互斥自監督
+      </div>
+      <p style="color: var(--text-sub); font-size: 14.5px; margin-bottom: 20px; line-height: 1.65;">
+        雙神經網路互斥約束機制：IDM 負責從狀態變化猜測潛在動作 $z_t$，FDM（前向世界模型）以「未來重構預測 Loss」倒逼動作必須具備真實物理驅動力。
+      </p>
+
+      <!-- HTML KaTeX Pipeline Flow -->
+      <div class="pipeline-flow-html">
+        <div class="flow-node">
+          <div class="flow-node-title">前後狀態對</div>
+          <div class="flow-node-math">$(s_t, s_{t+1})$</div>
+          <div class="flow-node-sub">無標籤連續時序影像</div>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node flow-node-cyan">
+          <div class="flow-node-title" style="color: var(--accent-cyan);">IDM 逆動力學模型</div>
+          <div class="flow-node-math" style="color: var(--accent-cyan);">$z_t \sim q_\phi(z \mid s_t, s_{t+1})$</div>
+          <div class="flow-node-sub">特徵差分 ＋ 動作壓縮</div>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node flow-node-mint">
+          <div class="flow-node-title" style="color: var(--accent-mint);">FDM 前向世界模型</div>
+          <div class="flow-node-math" style="color: var(--accent-mint);">$\hat{s}_{t+1} = f_{\text{FDM}}(s_t, z_t)$</div>
+          <div class="flow-node-sub">以 $(s_t, z_t)$ 預測未來狀態</div>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node flow-node-rose">
+          <div class="flow-node-title" style="color: var(--accent-red);">重構預測 Loss</div>
+          <div class="flow-node-math" style="color: var(--accent-red);">$\|\hat{s}_{t+1} - s_{t+1}\|^2$</div>
+          <div class="flow-node-sub">梯度反向傳播倒逼 IDM</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap: 18px;">
+        <div class="modal-card modal-card-cyan">
+          <div style="font-size: 15.5px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">IDM 逆動力學模型 —— 動作特徵提取器</div>
+          <ul class="modal-points">
+            <li><strong>特徵差分比對：</strong>輸入相鄰兩幀狀態 $(s_t, s_{t+1})$，網路感知像素光流或剛體運動之動態位移量 $\Delta \phi = \phi(s_{t+1}) - \phi(s_t)$。</li>
+            <li><strong>提煉潛在動作向量：</strong>將動態位移壓縮為低維連續向量 $z_t \in \mathbb{R}^{128}$，代表背後的控制力或機動意圖。</li>
+            <li><strong>防止雜訊干擾：</strong>透過神經網路的資訊瓶頸（Information Bottleneck），過濾掉背景天空、光影等無關雜訊，只保留驅動運動的物理因子。</li>
+          </ul>
+        </div>
+          <div class="modal-card modal-card-mint">
+          <div style="font-size: 15.5px; font-weight: 700; color: var(--accent-mint); margin-bottom: 6px;">FDM 前向世界模型 —— 物理真實性約束器</div>
+          <ul class="modal-points">
+            <li><strong>前向狀態預測：</strong>控制理論中的 Forward Dynamics Model（FDM），吃進當前狀態 $s_t$ 與動作 $z_t$，推演系統下一刻的真實轉移 $\hat{s}_{t+1}$。</li>
+            <li><strong>防塌陷約束機制（Anti-Collapse）：</strong>若 IDM 輸出的向量是錯誤的、無法與畫面的動態變化產生關聯，FDM 缺乏有效動態輸入將完全無法準確重構未來狀態，預測誤差（Reconstruction Loss）必然飆升。</li>
+            <li><strong>自監督閉環：</strong>預測 Loss 反向傳播，倒逼 IDM 產生的 $z_t$ 必須承載足夠的因果動力學資訊，成功建立無人監督的動作字典！</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 2 Template -->
+    <div id="modalContentStage2">
+      <div style="font-family: var(--font-display); font-size: 1.55rem; font-weight: 800; color: var(--accent-purple); margin-bottom: 8px;">
+        Stage 2 原理：隱空間純粹戰術策略學習（Latent Policy Learning）
+      </div>
+      <p style="color: var(--text-sub); font-size: 14.5px; margin-bottom: 20px; line-height: 1.65;">
+        將高階戰術思考與底層特定舵面完全解耦：在無人標註時序下，直接模仿專家意圖，並在低維平滑的動作流形上進行高效強化學習。
+      </p>
+
+      <!-- HTML KaTeX Pipeline Flow -->
+      <div class="pipeline-flow-html">
+        <div class="flow-node">
+          <div class="flow-node-title">無標籤專家數據庫</div>
+          <div class="flow-node-math">$\{\tau_i = (s_0, s_1, \dots)\}$</div>
+          <div class="flow-node-sub">海量飛行影片與遙測航跡</div>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node flow-node-cyan">
+          <div class="flow-node-title" style="color: var(--accent-cyan);">凍結 IDM 特徵器</div>
+          <div class="flow-node-math" style="color: var(--accent-cyan);">$z_t = \text{IDM}(s_t, s_{t+1})$</div>
+          <div class="flow-node-sub">離線自動標註專家意圖序列</div>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node flow-node-purple">
+          <div class="flow-node-title" style="color: var(--accent-purple);">隱空間策略大腦</div>
+          <div class="flow-node-math" style="color: var(--accent-purple);">$\pi_\theta(z_t \mid s_t)$</div>
+          <div class="flow-node-sub">學習高階空間走位與戰術機動</div>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node flow-node-amber">
+          <div class="flow-node-title" style="color: var(--accent-amber);">雙重學習優化</div>
+          <div class="flow-node-math" style="color: var(--accent-amber);">$\mathcal{L}_{\text{BC}} + D_{\text{KL}}$</div>
+          <div class="flow-node-sub">最大似然模仿 ＋ 先驗流形約束</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap: 18px;">
+        <div class="modal-card modal-card-purple">
+          <div style="font-size: 15.5px; font-weight: 700; color: var(--accent-purple); margin-bottom: 6px;">專家意圖蒸餾與 Latent BC</div>
+          <ul class="modal-points">
+            <li><strong>突破傳統 BC 限制：</strong>傳統模仿學習卡在沒有舵面標籤；現在所有專家影片都被凍結的 IDM 標上了隱動作序列 $z_{1:T}$，策略可直接進行意圖模仿。</li>
+            <li><strong>高階戰術泛化：</strong>策略網路 $\pi_\theta(z \mid s)$ 專注於學習空間戰術（如偵測障礙時輸出右偏意圖、咬尾時輸出大 G 盤旋），完全不需要過早過擬合在特定舵機上。</li>
+          </ul>
+        </div>
+
+        <div class="modal-card modal-card-cyan">
+          <div style="font-size: 15.5px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">高效強化學習探索（Latent RL Exploration）</div>
+          <ul class="modal-points">
+            <li><strong>時間與戰術抽象：</strong>在下游 RL 中，一個 $z$ 代表連續時序中的巨觀機動，避免傳統 RL 在毫秒級高頻舵面微震中隨機摸索造成的巨大算力浪費。</li>
+            <li><strong>物理可行性約束：</strong>加入先驗正則項 $D_{\text{KL}}(\pi_\theta(z \mid s) \parallel p(z))$，確保 Policy 探索的動作永遠落在第一階段驗證過的物理可行流形內，大幅降低失速墜機率！</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage 3 Template -->
+    <div id="modalContentStage3">
+      <div style="font-family: var(--font-display); font-size: 1.55rem; font-weight: 800; color: var(--accent-mint); margin-bottom: 8px;">
+        Stage 3 原理：微型解碼器極少樣本對齊與載具落地（Embodiment Adaptation）
+      </div>
+      <p style="color: var(--text-sub); font-size: 14.5px; margin-bottom: 20px; line-height: 1.65;">
+        只需數千步（5~10 分鐘）真實遙測數據，訓練極輕量的微型映射解碼器，即可將抽象動作向量 $z$ 快速接地到特定載具的實體控制指令。
+      </p>
+
+      <!-- HTML KaTeX Pipeline Flow -->
+      <div class="pipeline-flow-html">
+        <div class="flow-node flow-node-purple">
+          <div class="flow-node-title" style="color: var(--accent-purple);">策略大腦輸出</div>
+          <div class="flow-node-math" style="color: var(--accent-purple);">$z_t \in \mathbb{R}^{128}$</div>
+          <div class="flow-node-sub">通用戰術機動意圖向量</div>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node flow-node-mint">
+          <div class="flow-node-title" style="color: var(--accent-mint);">微型映射解碼器</div>
+          <div class="flow-node-math" style="color: var(--accent-mint);">$a_{\text{cmd}} = \text{Decoder}_\phi(z_t)$</div>
+          <div class="flow-node-sub">2層輕量 MLP（極少樣本對齊）</div>
+        </div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node flow-node-cyan">
+          <div class="flow-node-title" style="color: var(--accent-cyan);">實體載具動作執行</div>
+          <div class="flow-node-math" style="color: var(--accent-cyan);">$\omega_{1:4} \;\text{or}\; (\delta_a, \delta_e, \delta_r, \delta_{\text{th}})$</div>
+          <div class="flow-node-sub">四軸電機轉速 / F-16 舵面 / 遊戲按鍵</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap: 18px;">
+        <div class="modal-card modal-card-mint">
+          <div style="font-size: 15.5px; font-weight: 700; color: var(--accent-mint); margin-bottom: 6px;">Few-shot 極少樣本快速對齊</div>
+          <ul class="modal-points">
+            <li><strong>高階認知已預先定型：</strong>因為空間認知與戰術走位已在 Stage 2 全部定型，微型解碼器只負責局部座標映射，5~10 分鐘（幾千步）遙測數據就能收斂。</li>
+            <li><strong>極輕量零延遲：</strong>微型 MLP 僅約數十 KB，推論耗時低於 0.1 毫秒，完全不影響 60Hz 即時推論。</li>
+          </ul>
+        </div>
+
+        <div class="modal-card modal-card-cyan">
+          <div style="font-size: 15.5px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">跨載具構型移植（Cross-Embodiment）</div>
+          <ul class="modal-points">
+            <li><strong>通用大腦 ＋ 專屬肢體：</strong>大腦策略 $\pi(z \mid s)$ 保持不變；移植到四軸無人機時解碼為 4 顆電機轉速，移植到固定翼時解碼為連續氣動舵面，移植到電玩時解碼為 WASD 按鍵。</li>
+            <li><strong>模組化解耦：</strong>將高階意圖與底層具體硬體物理指令徹底解耦，大幅降低遷移至新載具時的重新訓練成本。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       JAVASCRIPT: SPATIAL ENGINE, SPOTLIGHT & LIGHTBOX ZOOM
+       ========================================================= -->
+  <script>
+    var slides = document.querySelectorAll('.slide');
+    var current = 0;
+    var total = slides.length;
+
+    // Lightbox Elements
+    var modal = document.getElementById('lightboxModal');
+    var modalImg = document.getElementById('lightboxImg');
+    var modalCap = document.getElementById('lightboxCaption');
+    var modalClose = document.getElementById('lightboxClose');
+
+    function openLightbox(src, caption) {
+      if (!modal || !modalImg) return;
+      modalImg.src = src;
+      modalCap.textContent = caption || '';
+
+      // Dynamic sizing: Large arcade view for pixelated 64x64 BigFish GIF
+      if (src.indexOf('rollout') !== -1) {
+        modalImg.style.width = 'min(76vh, 76vw)';
+        modalImg.style.height = 'min(76vh, 76vw)';
+        modalImg.style.maxWidth = 'min(76vh, 76vw)';
+        modalImg.style.maxHeight = 'min(76vh, 76vw)';
+        modalImg.style.imageRendering = 'pixelated';
+        modalImg.style.border = '2px solid rgba(56, 189, 248, 0.6)';
+        modalImg.style.boxShadow = '0 0 50px rgba(56, 189, 248, 0.4), 0 25px 70px rgba(0, 0, 0, 0.95)';
+      } else if (src.indexOf('google_form_qr') !== -1 || src.indexOf('local_ai_qr') !== -1) {
+        modalImg.style.width = 'min(50vh, 50vw)';
+        modalImg.style.height = 'min(50vh, 50vw)';
+        modalImg.style.maxWidth = 'min(50vh, 50vw)';
+        modalImg.style.maxHeight = 'min(50vh, 50vw)';
+        modalImg.style.imageRendering = 'pixelated';
+        modalImg.style.border = '4px solid var(--accent-cyan)';
+        modalImg.style.boxShadow = '0 0 50px rgba(56, 189, 248, 0.5), 0 25px 70px rgba(0, 0, 0, 0.95)';
+      } else {
+        modalImg.style.width = 'auto';
+        modalImg.style.height = 'auto';
+        modalImg.style.maxWidth = '90vw';
+        modalImg.style.maxHeight = '84vh';
+        modalImg.style.imageRendering = 'auto';
+        modalImg.style.border = '1px solid rgba(255, 255, 255, 0.18)';
+        modalImg.style.boxShadow = '0 25px 70px rgba(0, 0, 0, 0.85), 0 0 40px rgba(56, 189, 248, 0.25)';
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeLightbox() {
+      if (modal) modal.classList.remove('active');
+    }
+
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target !== modalImg) closeLightbox();
+      });
+    }
+    if (modalClose) {
+      modalClose.addEventListener('click', closeLightbox);
+    }
+
+    // Attach Click-to-Zoom on all .zoomable-wrap and .zoomable-img
+    document.querySelectorAll('.zoomable-wrap, .zoomable-img').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var fullSrc = el.getAttribute('data-full') || el.getAttribute('src');
+        if (!fullSrc && el.querySelector('img')) {
+          fullSrc = el.querySelector('img').getAttribute('src');
+        }
+        var caption = el.getAttribute('alt') || (el.querySelector('img') ? el.querySelector('img').getAttribute('alt') : '');
+        openLightbox(fullSrc, caption);
+      });
+    });
+
+    // UAV Multi-Object Switcher with Auto-Cycle & Radar Lock Beacons (Slide 5)
+    var uavObjNames = [
+      '圓形綠樹 (zA)',
+      '三角松樹 (zB)',
+      '尖頂房屋 (zC)',
+      '彩色熱氣球 (zD)'
+    ];
+
+    var cyanCoords = [
+      {x: 105, y: 55}, // 0: 圓形樹
+      {x: 122, y: 64}, // 1: 三角松
+      {x: 92, y: 48},  // 2: 尖頂房
+      {x: 115, y: 42}  // 3: 熱氣球
+    ];
+
+    var purpleCoords = [
+      {x: 270, y: 105}, // 0: 圓形樹
+      {x: 252, y: 95},  // 1: 三角松
+      {x: 288, y: 114}, // 2: 尖頂房
+      {x: 278, y: 90}   // 3: 熱氣球
+    ];
+
+    var uavRightFormulas = [
+      '$z_1 = [0.12,\\, 0.85,\\, 0.01,\\, \\dots] \\in \\mathbb{R}^{128}$',
+      '$z_1 = [0.16,\\, 0.81,\\, 0.03,\\, \\dots] \\in \\mathbb{R}^{128}$',
+      '$z_1 = [0.09,\\, 0.89,\\, 0.02,\\, \\dots] \\in \\mathbb{R}^{128}$',
+      '$z_1 = [0.14,\\, 0.84,\\, 0.01,\\, \\dots] \\in \\mathbb{R}^{128}$'
+    ];
+
+    var uavLeftFormulas = [
+      '$z_2 = [0.91,\\, 0.42,\\, 0.05,\\, \\dots] \\in \\mathbb{R}^{128}$',
+      '$z_2 = [0.87,\\, 0.46,\\, 0.04,\\, \\dots] \\in \\mathbb{R}^{128}$',
+      '$z_2 = [0.95,\\, 0.38,\\, 0.06,\\, \\dots] \\in \\mathbb{R}^{128}$',
+      '$z_2 = [0.89,\\, 0.44,\\, 0.03,\\, \\dots] \\in \\mathbb{R}^{128}$'
+    ];
+
+    var currentUavIdx = 0;
+    var uavAutoTimer = null;
+
+    function selectUavObject(idx, fromUserClick) {
+      currentUavIdx = idx;
+
+      // Update button active state
+      var btns = document.querySelectorAll('.obj-btn');
+      btns.forEach(function(b, i) {
+        b.classList.toggle('active', i === idx);
+      });
+
+      // Toggle SVG frames
+      for (var i = 0; i < 4; i++) {
+        var elems = document.querySelectorAll('.uav-obj-' + i);
+        elems.forEach(function(el) {
+          el.style.display = (i === idx) ? '' : 'none';
+        });
+      }
+
+      // Move Radar Tracking Beacons
+      var cRing = document.getElementById('cyanBeaconRing');
+      var cDot = document.getElementById('cyanBeaconDot');
+      if (cRing && cDot && cyanCoords[idx]) {
+        cRing.setAttribute('cx', cyanCoords[idx].x);
+        cRing.setAttribute('cy', cyanCoords[idx].y);
+        cDot.setAttribute('cx', cyanCoords[idx].x);
+        cDot.setAttribute('cy', cyanCoords[idx].y);
+      }
+      var pRing = document.getElementById('purpleBeaconRing');
+      var pDot = document.getElementById('purpleBeaconDot');
+      if (pRing && pDot && purpleCoords[idx]) {
+        pRing.setAttribute('cx', purpleCoords[idx].x);
+        pRing.setAttribute('cy', purpleCoords[idx].y);
+        pDot.setAttribute('cx', purpleCoords[idx].x);
+        pDot.setAttribute('cy', purpleCoords[idx].y);
+      }
+
+      // Highlight active dot class in SVG
+      for (var i = 0; i < 4; i++) {
+        var cPt = document.getElementById('cyan-dot-' + i);
+        var pPt = document.getElementById('purple-dot-' + i);
+        if (cPt) cPt.classList.toggle('active-dot', i === idx);
+        if (pPt) pPt.classList.toggle('active-dot', i === idx);
+      }
+
+      // Update label cue
+      var cue = document.getElementById('uavObjCue');
+      if (cue && uavObjNames[idx]) {
+        cue.textContent = '當前地景：' + uavObjNames[idx];
+      }
+
+      // Dynamically update formula numbers
+      var fR = document.getElementById('uavFormulaRight');
+      var fL = document.getElementById('uavFormulaLeft');
+      if (fR && uavRightFormulas[idx]) fR.innerHTML = uavRightFormulas[idx];
+      if (fL && uavLeftFormulas[idx]) fL.innerHTML = uavLeftFormulas[idx];
+      if (typeof renderMathInElement === 'function') {
+        if (fR) renderMathInElement(fR, {delimiters: [{left: '$', right: '$', display: false}], throwOnError: false});
+        if (fL) renderMathInElement(fL, {delimiters: [{left: '$', right: '$', display: false}], throwOnError: false});
+      }
+
+      // If clicked by user, reset auto-cycle interval so it gives user full 2.6s
+      if (fromUserClick && uavAutoTimer) {
+        startUavAutoCycle();
+      }
+    }
+
+    function startUavAutoCycle() {
+      stopUavAutoCycle();
+      uavAutoTimer = setInterval(function() {
+        currentUavIdx = (currentUavIdx + 1) % 4;
+        selectUavObject(currentUavIdx, false);
+      }, 2600);
+    }
+
+    function stopUavAutoCycle() {
+      if (uavAutoTimer) {
+        clearInterval(uavAutoTimer);
+        uavAutoTimer = null;
+      }
+    }
+
+    // Cluster Reveal Toggle & Hover logic for Slide 5
+    var clustersRevealed = false;
+
+    function toggleClusterReveal(e) {
+      if (e) e.stopPropagation();
+      clustersRevealed = !clustersRevealed;
+      var panel = document.getElementById('uavLatentPanel');
+      var btn = document.getElementById('clusterRevealBtn');
+      if (panel) {
+        panel.classList.toggle('clusters-revealed', clustersRevealed);
+      }
+      if (btn) {
+        btn.classList.toggle('active', clustersRevealed);
+        btn.textContent = clustersRevealed ? '✓ 分群已顯示 (Stage 3)' : '🔍 動作分群 (Stage 3)';
+      }
+    }
+
+    function setHoverCluster(type) {
+      var panel = document.getElementById('uavLatentPanel');
+      if (!panel || clustersRevealed) return;
+      if (type) {
+        panel.classList.add('clusters-revealed');
+      } else {
+        panel.classList.remove('clusters-revealed');
+      }
+    }
+
+    // Stage Interactive Modals (Slide 5)
+    var stageModal = document.getElementById('stageModal');
+    var stageModalBody = document.getElementById('stageModalBody');
+
+    function openStageModal(stageId) {
+      if (!stageModal || !stageModalBody) return;
+      var template = document.getElementById('modalContentStage' + stageId);
+      if (!template) return;
+      stopUavAutoCycle();
+      stageModalBody.innerHTML = template.innerHTML;
+      stageModal.classList.add('active');
+      initMathTypesetting(stageModalBody);
+    }
+
+    function closeStageModal() {
+      if (stageModal) {
+        stageModal.classList.remove('active');
+        if (current === 4) startUavAutoCycle();
+      }
+    }
+
+    if (stageModal) {
+      stageModal.addEventListener('click', function(e) {
+        if (e.target === stageModal) {
+          closeStageModal();
+        }
+      });
+    }
+
+    // Directional Spatial Navigation Engine
+    function goTo(index) {
+      if (index < 0 || index >= total || index === current) return;
+      current = index;
+      slides.forEach(function(s, i) {
+        s.classList.remove('active', 'past');
+        if (i === current) {
+          s.classList.add('active');
+        } else if (i < current) {
+          s.classList.add('past');
+        }
+      });
+      updateUI();
+      if (current === 4) {
+        startUavAutoCycle();
+      } else {
+        stopUavAutoCycle();
+      }
+      setTimeout(initMathTypesetting, 50);
+    }
+
+    function next() { goTo(current + 1); }
+    function prev() { goTo(current - 1); }
+
+    function updateUI() {
+      var progress = document.getElementById('progress');
+      if (progress) progress.style.width = ((current + 1) / total * 100) + '%';
+
+      var counter = document.getElementById('counter');
+      if (counter) counter.textContent = (current + 1 < 10 ? '0' : '') + (current + 1) + ' / ' + total;
+
+      document.querySelectorAll('.slide-nav-dot').forEach(function(d, i) {
+        d.classList.toggle('active', i === current);
+      });
+    }
+
+    // Keyboard Shortcuts (Aware of Stage Modal & Lightbox Modal)
+    document.addEventListener('keydown', function(e) {
+      if (stageModal && stageModal.classList.contains('active')) {
+        if (e.key === 'Escape') closeStageModal();
+        return;
+      }
+      if (modal && modal.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault(); next();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault(); prev();
+      } else if (e.key === 'Home') {
+        e.preventDefault(); goTo(0);
+      } else if (e.key === 'End') {
+        e.preventDefault(); goTo(total - 1);
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      }
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(function(){});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    // Mouse Wheel Throttled Navigation
+    var wheelLock = false;
+    document.addEventListener('wheel', function(e) {
+      if (modal && modal.classList.contains('active')) return;
+      if (wheelLock) return;
+      wheelLock = true;
+      setTimeout(function() { wheelLock = false; }, 600);
+      if (e.deltaY > 0 || e.deltaX > 0) next();
+      else if (e.deltaY < 0 || e.deltaX < 0) prev();
+    }, {passive: true});
+
+    // Touch Swipe Support
+    var touchStartX = 0;
+    document.addEventListener('touchstart', function(e) {
+      touchStartX = e.touches[0].clientX;
+    }, {passive: true});
+
+    document.addEventListener('touchend', function(e) {
+      if (modal && modal.classList.contains('active')) return;
+      var diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) next(); else prev();
+      }
+    }, {passive: true});
+
+    // Nav Dots Generation
+    var slideNav = document.getElementById('slideNav');
+    if (slideNav) {
+      slideNav.innerHTML = '';
+      slides.forEach(function(_, i) {
+        var dot = document.createElement('div');
+        dot.className = 'slide-nav-dot' + (i === 0 ? ' active' : '');
+        dot.addEventListener('click', function() { goTo(i); });
+        slideNav.appendChild(dot);
+      });
+    }
+
+    // 3D Card Tilt + Cursor Spotlight Glow
+    document.querySelectorAll('.card').forEach(function(card) {
+      card.addEventListener('mousemove', function(e) {
+        var rect = card.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', x + 'px');
+        card.style.setProperty('--mouse-y', y + 'px');
+
+        var tiltX = (x / rect.width - 0.5) * 8;
+        var tiltY = (y / rect.height - 0.5) * -8;
+        card.style.transform = 'perspective(1000px) rotateX(' + tiltY + 'deg) rotateY(' + tiltX + 'deg) translateY(-5px)';
+      });
+      card.addEventListener('mouseleave', function() {
+        card.style.transform = '';
+      });
+    });
+
+    // KaTeX Global Typesetting
+    function initMathTypesetting(targetEl) {
+      var root = targetEl || document.body;
+      if (typeof renderMathInElement === 'function') {
+        try {
+          renderMathInElement(root, {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false}
+            ],
+            ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "annotation"],
+            throwOnError: false
+          });
+        } catch(e) {
+          console.warn('KaTeX render notice:', e);
+        }
+      } else {
+        var attempts = 0;
+        var timer = setInterval(function() {
+          attempts++;
+          if (typeof renderMathInElement === 'function') {
+            clearInterval(timer);
+            try {
+              renderMathInElement(root, {
+                delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '$', right: '$', display: false}
+                ],
+                ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "annotation"],
+                throwOnError: false
+              });
+            } catch(e) {}
+          }
+          if (attempts > 30) clearInterval(timer);
+        }, 100);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', initMathTypesetting);
+    window.addEventListener('load', function() {
+      setTimeout(initMathTypesetting, 100);
+      setTimeout(initMathTypesetting, 400);
+    });
+
+    // Atmospheric Drift Particles
+    (function initParticles() {
+      var pCanvas = document.getElementById('particleCanvas');
+      if (!pCanvas) return;
+      var pCtx = pCanvas.getContext('2d');
+      var w, h;
+      var particles = [];
+
+      function resize() {
+        w = pCanvas.width = window.innerWidth;
+        h = pCanvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      for (var i = 0; i < 35; i++) {
+        particles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: -Math.random() * 0.35 - 0.08,
+          size: Math.random() * 1.8 + 0.6,
+          alpha: Math.random() * 0.5 + 0.15
+        });
+      }
+
+      function loop() {
+        pCtx.clearRect(0, 0, w, h);
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.y < 0) { p.y = h; p.x = Math.random() * w; }
+          if (p.x < 0) p.x = w;
+          if (p.x > w) p.x = 0;
+
+          pCtx.beginPath();
+          pCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          pCtx.fillStyle = 'rgba(56, 189, 248, ' + p.alpha + ')';
+          pCtx.fill();
+        }
+        requestAnimationFrame(loop);
+      }
+      loop();
+    })();
+
+    // Init
+    updateUI();
+  </script>
+</body>
+</html>
