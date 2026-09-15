@@ -11,6 +11,21 @@
   <meta property="og:description" content="國立成功大學 · 航空太空工程學系 雙主修 資訊工程學系">
   <meta property="og:type" content="website">
 
+  <!-- Pre-render Language Detection -->
+  <script>
+    (function() {
+      try {
+        var savedLang = localStorage.getItem('bluew_lang');
+        if (!savedLang) {
+          var browserLang = (navigator.language || (navigator.languages && navigator.languages[0]) || '').toLowerCase();
+          savedLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+        }
+        document.documentElement.setAttribute('data-lang', savedLang);
+        document.documentElement.setAttribute('lang', savedLang === 'zh' ? 'zh-TW' : 'en');
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -987,8 +1002,8 @@
         <span class="i18n-en">[ PRESENTATIONS ]</span>
       </div>
       <h2 class="sec-title">
-        <span class="i18n-zh">最新研究簡報</span>
-        <span class="i18n-en">Featured Presentation</span>
+        <span class="i18n-zh">簡報</span>
+        <span class="i18n-en">Presentations</span>
       </h2>
 
       <div class="bento-container">
@@ -1006,8 +1021,8 @@
           </div>
 
           <h3 class="talk-heading">
-            <span class="i18n-zh">自監督潛在動作模型（LAM）理論進展與 AI 空戰實測剖析</span>
-            <span class="i18n-en">Self-Supervised Latent Action Models (LAM) and AI Air Combat Analysis</span>
+            <span class="i18n-zh">潛在動作模型（LAM）與 AI dogfight</span>
+            <span class="i18n-en">Latent Action Models (LAM) & AI Dogfight</span>
           </h3>
 
           <p class="talk-summary">
@@ -1070,15 +1085,18 @@
         <span class="i18n-en">[ PROJECTS & TOOLS ]</span>
       </div>
       <h2 class="sec-title">
-        <span class="i18n-zh">精選開源與工程專案</span>
-        <span class="i18n-en">Featured Projects</span>
+        <span class="i18n-zh">專案</span>
+        <span class="i18n-en">Projects</span>
       </h2>
 
       <div class="bento-container">
         <!-- Project 1: NCKU Moodle Keeper -->
         <div class="bento-panel w-6">
           <div class="card-head">
-            <h3 class="card-title">NCKU Moodle Keeper</h3>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img src="assets/moodle_keeper_icon.png" alt="NCKU Moodle Keeper Icon" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); flex-shrink: 0;">
+              <h3 class="card-title">NCKU Moodle Keeper</h3>
+            </div>
             <span class="tag-chip tag-cyan">EXTENSION</span>
           </div>
           <p class="card-desc">
@@ -1318,8 +1336,12 @@
     (function() {
       const htmlEl = document.documentElement;
       const toggleBtn = document.getElementById('langToggleBtn');
-      const savedLang = localStorage.getItem('bluew_lang') || 'zh';
-      setLanguage(savedLang);
+      let initialLang = localStorage.getItem('bluew_lang');
+      if (!initialLang) {
+        const browserLang = (navigator.language || (navigator.languages && navigator.languages[0]) || '').toLowerCase();
+        initialLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+      }
+      setLanguage(initialLang);
 
       toggleBtn.addEventListener('click', function() {
         const currentLang = htmlEl.getAttribute('data-lang') || 'zh';
