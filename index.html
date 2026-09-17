@@ -46,6 +46,8 @@
       --accent-teal: #2dd4bf;
       --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
     }
 
     * {
@@ -70,17 +72,112 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Modern Linear Static Ambient Depth Overlay */
+    /* Ambient Depth Overlay with Slow Drift */
     .ambient-atmosphere {
       position: fixed;
-      inset: 0;
+      inset: -50%;
       pointer-events: none;
       z-index: 0;
-      background: 
+      background:
         radial-gradient(1000px circle at 50% -10%, rgba(56, 189, 248, 0.08) 0%, transparent 65%),
         radial-gradient(800px circle at 85% 40%, rgba(99, 102, 241, 0.05) 0%, transparent 60%),
         radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
       background-size: 100% 100%, 100% 100%, 40px 40px;
+      animation: ambient-drift 40s var(--ease-in-out) infinite alternate;
+    }
+
+    @keyframes ambient-drift {
+      from {
+        transform: translate3d(-2.5%, -2%, 0);
+      }
+      to {
+        transform: translate3d(2.5%, 2%, 0);
+      }
+    }
+
+    /* Motion System — Surgical personality (transform/opacity only) */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      filter: blur(8px);
+      transition:
+        opacity 640ms var(--ease-out) var(--reveal-delay, 0ms),
+        transform 640ms var(--ease-out) var(--reveal-delay, 0ms),
+        filter 640ms var(--ease-out) var(--reveal-delay, 0ms);
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+
+    .hero-photo-col.reveal {
+      transform: none;
+      filter: none;
+      transition: opacity 900ms var(--ease-out) var(--reveal-delay, 0ms);
+    }
+
+    .hero-photo-col.reveal .hero-photo-frame {
+      clip-path: inset(0 0 100% 0);
+      transition: clip-path 900ms var(--ease-out) var(--reveal-delay, 0ms);
+    }
+
+    .hero-photo-col.reveal.in .hero-photo-frame {
+      clip-path: none;
+    }
+
+    /* Marquee Strip */
+    .marquee-strip {
+      overflow: hidden;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(8, 12, 22, 0.5);
+      padding: 14px 0;
+    }
+
+    .marquee-track {
+      display: flex;
+      align-items: center;
+      width: max-content;
+      animation: marquee-scroll 32s linear infinite;
+    }
+
+    .marquee-track span {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+      margin-right: 48px;
+    }
+
+    @keyframes marquee-scroll {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal,
+      .hero-photo-col.reveal {
+        transition-duration: 1ms;
+        transform: none;
+        filter: none;
+      }
+      .hero-photo-col.reveal .hero-photo-frame {
+        clip-path: none;
+        transition-duration: 1ms;
+      }
+      .marquee-track,
+      .ambient-atmosphere {
+        animation: none;
+      }
     }
 
     /* Layout Shell */
@@ -90,6 +187,7 @@
       max-width: 1040px;
       margin: 0 auto;
       padding: 0 24px 100px;
+      overflow-x: clip;
     }
 
     /* Navigation Bar */
@@ -114,35 +212,6 @@
     .navbar:hover {
       border-color: rgba(255, 255, 255, 0.12);
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-    }
-
-    .brand-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-    }
-
-    .brand-glyph {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(96, 165, 250, 0.12) 100%);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-mono);
-      font-weight: 800;
-      font-size: 13px;
-      color: var(--accent-cyan);
-    }
-
-    .brand-title {
-      font-weight: 700;
-      font-size: 15px;
-      color: var(--text-primary);
-      letter-spacing: -0.01em;
     }
 
     .nav-items {
@@ -191,9 +260,113 @@
       border-color: var(--accent-cyan);
     }
 
-    /* Hero Section */
+    /* Hero Section with Portrait */
     .hero-wrap {
-      padding: 48px 0 54px;
+      position: relative;
+      padding: 48px 0 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 470px;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .hero-text {
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+    }
+
+    .hero-tagline {
+      font-size: 15.5px;
+      color: var(--text-secondary);
+      line-height: 1.85;
+      max-width: 520px;
+      margin-bottom: 30px;
+    }
+
+    .hero-tagline strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .hero-photo-col {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      min-width: 0;
+      margin-left: -64px;
+      margin-bottom: -140px;
+    }
+
+    .hero-photo-frame {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .hero-photo-glow {
+      position: absolute;
+      bottom: -70px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160%;
+      aspect-ratio: 1 / 1;
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.16) 0%, rgba(56, 189, 248, 0.08) 38%, transparent 68%);
+      pointer-events: none;
+    }
+
+    .hero-photo {
+      position: relative;
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 32px 64px rgba(0, 0, 0, 0.55));
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+
+    .photo-chip {
+      position: absolute;
+      z-index: 3;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+      background: rgba(8, 12, 22, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      transform: rotate(var(--tilt, 0deg));
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .photo-chip:hover {
+      transform: rotate(var(--tilt, 0deg)) translateY(-3px);
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .chip-lab {
+      top: 17%;
+      left: -20px;
+      --tilt: -2deg;
+    }
+
+    .chip-handle {
+      bottom: 20%;
+      right: -16px;
+      --tilt: 1.5deg;
+      color: var(--accent-cyan);
+      border-color: rgba(56, 189, 248, 0.3);
     }
 
     .dept-badge {
@@ -219,27 +392,25 @@
     }
 
     .hero-name {
-      font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+      width: max-content;
+      font-size: clamp(3rem, 6vw, 4.8rem);
       font-weight: 800;
       color: #ffffff;
       letter-spacing: -0.035em;
-      line-height: 1.08;
-      margin-bottom: 26px;
-    }
-
-    .hero-name .en-tag {
-      font-size: 0.55em;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-left: 14px;
-      letter-spacing: -0.01em;
-      font-family: var(--font-mono);
+      line-height: 1.3;
+      padding-bottom: 0.12em;
+      margin-bottom: 17px;
+      white-space: nowrap;
+      background: linear-gradient(180deg, #ffffff 38%, #9fb0c8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .hero-cta-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
     }
 
@@ -249,7 +420,7 @@
       gap: 8px;
       font-size: 14px;
       font-weight: 600;
-      padding: 11px 22px;
+      padding: 11px 18px;
       border-radius: 10px;
       text-decoration: none;
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -360,7 +531,7 @@
       transition: opacity 0.3s ease;
     }
 
-    .bento-panel:hover {
+    .bento-panel.bento-panel:hover {
       background: var(--card-bg-hover);
       transform: translateY(-2px);
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
@@ -371,7 +542,42 @@
     }
 
     .w-12 { grid-column: span 12; }
+    .w-7  { grid-column: span 7; }
     .w-6  { grid-column: span 6; }
+    .w-5  { grid-column: span 5; }
+
+    /* About Section: Single-line Motto */
+    /* 人生哲理還沒想好：先隱藏整個 About 內容，文案確定後刪掉這則規則即可 */
+    #about > * { display: none; }
+
+    .motto {
+      position: relative;
+      font-size: clamp(1.5rem, 3vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.45;
+      color: var(--text-primary);
+      max-width: 18ch;
+    }
+
+    .motto::before {
+      content: '';
+      position: absolute;
+      left: -22px;
+      top: 0.35em;
+      bottom: 0.35em;
+      width: 3px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, var(--accent-cyan), rgba(45, 212, 191, 0.25));
+    }
+
+    .motto-note {
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1.2px;
+      color: var(--text-tertiary);
+    }
 
     /* Featured Presentation Banner */
     .talk-tags {
@@ -703,14 +909,53 @@
 
     /* Responsive System: Tablet & Mobile Optimization */
     @media (max-width: 860px) {
-      .w-6 {
+      .w-5,
+      .w-6,
+      .w-7 {
         grid-column: span 12;
       }
+      .nav-items {
+        gap: 10px;
+      }
       .navbar .nav-links {
-        display: none;
+        gap: 12px;
+      }
+      .navbar .nav-links a {
+        font-size: 12.5px;
       }
       .bento-panel {
         padding: 24px 20px;
+      }
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+        align-items: start;
+      }
+      .hero-photo-col {
+        order: -1;
+        margin-left: 0;
+        margin-bottom: -48px;
+        z-index: 2;
+      }
+      .hero-text {
+        position: relative;
+        z-index: 3;
+        padding-bottom: 0;
+        text-align: center;
+      }
+      .dept-badge {
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .hero-tagline {
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .hero-cta-group {
+        justify-content: center;
+      }
+      .hero-photo-frame {
+        max-width: 300px;
       }
     }
 
@@ -723,20 +968,16 @@
         padding: 10px 14px;
         border-radius: 12px;
       }
-      .brand-title {
-        font-size: 14px;
-      }
-      .brand-glyph {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-      }
       .lang-btn {
         padding: 5px 12px;
         font-size: 11.5px;
       }
       .hero-wrap {
-        padding: 20px 0 32px;
+        padding: 20px 0 0;
+      }
+
+      .hero-photo-frame {
+        max-width: 250px;
       }
       .dept-badge {
         font-size: 11.5px;
@@ -748,16 +989,9 @@
       }
       .hero-name {
         font-size: 2.25rem;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin-bottom: 22px;
-        line-height: 1.15;
-      }
-      .hero-name .en-tag {
-        margin-left: 0;
-        font-size: 0.52em;
-        line-height: 1.2;
+        margin-bottom: 18px;
+        padding-bottom: 0.12em;
+        line-height: 1.3;
       }
       .hero-cta-group {
         flex-direction: column;
@@ -918,13 +1152,6 @@
 
     <!-- Header Navigation -->
     <header class="navbar">
-      <a href="#" class="brand-group">
-        <div class="brand-glyph">W</div>
-        <span class="brand-title">
-          <span class="i18n-zh">巫冠呈</span>
-          <span class="i18n-en">Guan-Cheng Wu</span>
-        </span>
-      </a>
 
       <div class="nav-items">
         <ul class="nav-links">
@@ -960,47 +1187,91 @@
           </li>
         </ul>
 
-        <button class="lang-btn" id="langToggleBtn" type="button" aria-label="Toggle Language">
-          <span class="i18n-zh">EN</span>
-          <span class="i18n-en">中文</span>
-        </button>
       </div>
+
+      <button class="lang-btn" id="langToggleBtn" type="button" aria-label="Toggle Language">
+        <span class="i18n-zh">EN</span>
+        <span class="i18n-en">中文</span>
+      </button>
     </header>
 
     <!-- Hero Section -->
-    <section class="hero-wrap" id="about">
-      <div class="dept-badge">
-        <span class="dept-badge-dot"></span>
-        <span class="i18n-zh">成功大學 · 航空太空工程學系 雙主修 資訊工程學系</span>
-        <span class="i18n-en">NCKU · Aerospace Engineering & Computer Science</span>
+    <section class="hero-wrap" id="top">
+      <div class="hero-grid">
+        <div class="hero-text">
+          <div class="dept-badge">
+            <span class="dept-badge-dot"></span>
+            <span class="i18n-zh">成功大學 · 航空太空工程學系 雙主修 資訊工程學系</span>
+            <span class="i18n-en">NCKU · Aerospace Engineering & Computer Science</span>
+          </div>
+
+          <h1 class="hero-name">
+            <span class="i18n-zh">巫冠呈</span>
+            <span class="i18n-en">Guan-Cheng Wu</span>
+          </h1>
+
+          <div class="hero-cta-group">
+            <a href="#projects" class="cta-btn cta-primary">
+              <span class="i18n-zh">瀏覽精選專案 ➜</span>
+              <span class="i18n-en">Explore Projects ➜</span>
+            </a>
+            <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer" class="cta-btn cta-ghost">
+              <span>GitHub @BigBlueW ↗</span>
+            </a>
+            <a href="#contact" class="cta-btn cta-ghost">
+              <span class="i18n-zh">聯絡方式</span>
+              <span class="i18n-en">Get in Touch</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-photo-col">
+          <div class="hero-photo-frame">
+            <div class="hero-photo-glow"></div>
+            <picture>
+              <source srcset="assets/b56af1.webp" type="image/webp">
+              <picture>
+                <source type="image/webp" srcset="assets/b56af1.webp">
+                <img class="hero-photo" src="assets/b56af1.png" width="900" height="1205" alt="巫冠呈 Guan-Cheng Wu 於 ActInSpace 2026 的半身照" fetchpriority="high" draggable="false">
+              </picture>
+            </picture>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <h1 class="hero-name">
-        <span class="i18n-zh">巫冠呈<span class="en-tag">Guan-Cheng Wu (BlueW)</span></span>
-        <span class="i18n-en">Guan-Cheng Wu<span class="en-tag">BlueW</span></span>
-      </h1>
+    <!-- Marquee Strip -->
+    <div class="marquee-strip" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Latent Action Models ✦</span>
+        <span>Robotics ✦</span>
+        <span>Browser Tools ✦</span>
+        <span>NCKU Lab 5923 ✦</span>
+        <span>Aerospace Engineering ✦</span>
+        <span>Latent Action Models ✦</span>
+        <span>Robotics ✦</span>
+        <span>Browser Tools ✦</span>
+        <span>NCKU Lab 5923 ✦</span>
+        <span>Aerospace Engineering ✦</span>
+      </div>
+    </div>
 
-      <div class="hero-cta-group">
-        <a href="#projects" class="cta-btn cta-primary">
-          <span class="i18n-zh">瀏覽精選專案 ➜</span>
-          <span class="i18n-en">Explore Projects ➜</span>
-        </a>
-        <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer" class="cta-btn cta-ghost">
-          <span>GitHub @BigBlueW ↗</span>
-        </a>
-        <a href="#contact" class="cta-btn cta-ghost">
-          <span class="i18n-zh">聯絡方式</span>
-          <span class="i18n-en">Get in Touch</span>
-        </a>
+    <!-- About Section -->
+    <section class="section-block" id="about">
+      <div class="sec-kicker">[ 01 ]</div>
+      <p class="motto">
+        <span class="i18n-zh">「一句話還沒想好，先佔個位。」</span>
+        <span class="i18n-en">"One line I haven't decided on yet — holding the spot."</span>
+      </p>
+      <div class="motto-note">
+        <span class="i18n-zh">// 人生哲理 · 待補</span>
+        <span class="i18n-en">// LIFE MOTTO · TBD</span>
       </div>
     </section>
 
     <!-- Featured Presentation -->
     <section class="section-block" id="talks">
-      <div class="sec-kicker">
-        <span class="i18n-zh">[ 公開簡報與展示 ]</span>
-        <span class="i18n-en">[ PRESENTATIONS ]</span>
-      </div>
+      <div class="sec-kicker">[ 02 ]</div>
       <h2 class="sec-title">
         <span class="i18n-zh">簡報</span>
         <span class="i18n-en">Presentations</span>
@@ -1080,10 +1351,7 @@
 
     <!-- Selected Projects -->
     <section class="section-block" id="projects">
-      <div class="sec-kicker">
-        <span class="i18n-zh">[ 精選專案與實作 ]</span>
-        <span class="i18n-en">[ PROJECTS & TOOLS ]</span>
-      </div>
+      <div class="sec-kicker">[ 03 ]</div>
       <h2 class="sec-title">
         <span class="i18n-zh">專案</span>
         <span class="i18n-en">Projects</span>
@@ -1094,7 +1362,7 @@
         <div class="bento-panel w-6">
           <div class="card-head">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <img src="assets/moodle_keeper_icon.png" alt="NCKU Moodle Keeper Icon" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); flex-shrink: 0;">
+              <img src="assets/moodle_keeper_icon.png" alt="NCKU Moodle Keeper Icon" draggable="false" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); flex-shrink: 0;">
               <h3 class="card-title">NCKU Moodle Keeper</h3>
             </div>
             <span class="tag-chip tag-cyan">EXTENSION</span>
@@ -1222,10 +1490,7 @@
 
     <!-- Skills & Tech Stack -->
     <section class="section-block" id="skills">
-      <div class="sec-kicker">
-        <span class="i18n-zh">[ 技術與工具庫 ]</span>
-        <span class="i18n-en">[ TECH STACK ]</span>
-      </div>
+      <div class="sec-kicker">[ 04 ]</div>
       <h2 class="sec-title">
         <span class="i18n-zh">專業技能與工具</span>
         <span class="i18n-en">Skills & Toolchain</span>
@@ -1294,10 +1559,7 @@
 
     <!-- Contact Block with Click-to-Copy -->
     <section class="section-block" id="contact">
-      <div class="sec-kicker">
-        <span class="i18n-zh">[ 聯絡方式 ]</span>
-        <span class="i18n-en">[ CONTACT ]</span>
-      </div>
+      <div class="sec-kicker">[ 05 ]</div>
       <h2 class="sec-title">
         <span class="i18n-zh">聯絡與交流</span>
         <span class="i18n-en">Get in Touch</span>
@@ -1358,7 +1620,7 @@
           &copy; 2026 巫冠呈 (Guan-Cheng Wu / BlueW). Hosted on GitHub Pages.
         </div>
         <div class="footer-nav">
-          <a href="#">
+          <a href="#top">
             <span class="i18n-zh">返回頂部 ↑</span>
             <span class="i18n-en">Back to Top ↑</span>
           </a>
@@ -1423,16 +1685,108 @@
     (function() {
       const panels = document.querySelectorAll('.bento-panel');
 
+      let mx = 0, my = 0, ticking = false;
       window.addEventListener('mousemove', function(e) {
-        panels.forEach(panel => {
-          const rect = panel.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-
-          panel.style.setProperty('--mouse-x', `${x}px`);
-          panel.style.setProperty('--mouse-y', `${y}px`);
+        mx = e.clientX;
+        my = e.clientY;
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          ticking = false;
+          panels.forEach(panel => {
+            const rect = panel.getBoundingClientRect();
+            panel.style.setProperty('--mouse-x', `${mx - rect.left}px`);
+            panel.style.setProperty('--mouse-y', `${my - rect.top}px`);
+          });
         });
       }, { passive: true });
+    })();
+
+    // 4. Scroll Reveal with Stagger
+    (function() {
+      const targets = document.querySelectorAll('.sec-kicker, .sec-title, .motto, .bento-panel, .dept-badge, .hero-name, .hero-cta-group, .hero-photo-col');
+      if (!targets.length) return;
+
+      targets.forEach(el => el.classList.add('reveal'));
+
+      const heroStagger = { '.dept-badge': 120, '.hero-name': 240, '.hero-cta-group': 360 };
+      Object.keys(heroStagger).forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) el.style.setProperty('--reveal-delay', heroStagger[sel] + 'ms');
+      });
+
+      document.querySelectorAll('.bento-container').forEach(container => {
+        container.querySelectorAll(':scope > .bento-panel').forEach((panel, i) => {
+          panel.style.setProperty('--reveal-delay', (i * 90) + 'ms');
+        });
+      });
+
+      if (!('IntersectionObserver' in window)) return;
+
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -36px 0px' });
+
+      targets.forEach(el => io.observe(el));
+    })();
+
+    // 5. Hero Name Scramble Decode
+    (function() {
+      const nameEl = document.querySelector('.hero-name');
+      if (!nameEl) return;
+      const CHARS = '█▓▒░<>/[]{}=+*^?#_';
+      let timer = null;
+
+      function visibleSpan() {
+        const spans = nameEl.querySelectorAll('span');
+        for (const s of spans) {
+          if (s.offsetParent !== null) return s;
+        }
+        return null;
+      }
+
+      function scramble() {
+        const span = visibleSpan();
+        if (!span) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const original = span.textContent;
+        if (timer) cancelAnimationFrame(timer);
+        const start = performance.now();
+        const duration = 900;
+        function frame(now) {
+          const p = Math.min((now - start) / duration, 1);
+          const settled = Math.floor(p * original.length);
+          let out = '';
+          for (let i = 0; i < original.length; i++) {
+            const ch = original[i];
+            if (i < settled || ch === ' ' || ch === '-') {
+              out += ch;
+            } else {
+              out += CHARS[(Math.random() * CHARS.length) | 0];
+            }
+          }
+          span.textContent = out;
+          if (p < 1) {
+            timer = requestAnimationFrame(frame);
+          } else {
+            span.textContent = original;
+            timer = null;
+          }
+        }
+        timer = requestAnimationFrame(frame);
+      }
+
+      setTimeout(scramble, 320);
+
+      const htmlEl = document.documentElement;
+      new MutationObserver(() => {
+        setTimeout(scramble, 60);
+      }).observe(htmlEl, { attributes: true, attributeFilter: ['data-lang'] });
     })();
   </script>
 </body>
