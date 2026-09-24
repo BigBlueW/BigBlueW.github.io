@@ -1521,11 +1521,8 @@
           <div class="hero-photo-frame">
             <div class="hero-photo-glow"></div>
             <picture>
-              <source srcset="assets/b56af1.webp" type="image/webp">
-              <picture>
-                <source type="image/webp" srcset="assets/b56af1.webp">
-                <img class="hero-photo" src="assets/b56af1.png" width="900" height="1205" alt="巫冠呈 Guan-Cheng Wu 於 ActInSpace 2026 的半身照" fetchpriority="high" draggable="false">
-              </picture>
+              <source type="image/webp" srcset="assets/b56af1.webp">
+              <img class="hero-photo" src="assets/b56af1.png" width="900" height="1205" alt="巫冠呈 Guan-Cheng Wu 於 ActInSpace 2026 的半身照" fetchpriority="high" draggable="false">
             </picture>
           </div>
         </div>
@@ -1655,18 +1652,18 @@
             </h3>
             <div class="project-row-sub">
               <span class="sub-branch" aria-hidden="true"></span>
-              <a class="sub-link" href="https://github.com/BigBlueW/garbage-classification-yolo" target="_blank" rel="noopener noreferrer">
-                Garbage Classification YOLO
+              <a class="sub-link" href="https://github.com/BigBlueW/garbage-yolo" target="_blank" rel="noopener noreferrer">
+                garbage-yolo
                 <span class="i18n-zh">（感知模組）</span>
                 <span class="i18n-en">(perception module)</span>
               </a>
             </div>
             <p class="project-row-desc">
               <span class="i18n-zh">
-                自主移動機器人底盤與雙 TM5S 機械手臂協同作業平台，整合 ROS 2 / Nav2 導航堆疊；內建 Garbage Classification YOLO（YOLOv11-OBB）垃圾分類與即時抓取姿態預測感知模組，實現動態避障、物體辨識與自主夾取。
+                自主移動機器人底盤與雙 TM5S 機械手臂協同作業平台，整合 ROS 2 / Nav2 導航堆疊；內建 Garbage YOLO（YOLOv11-OBB）垃圾分類與即時抓取姿態預測感知模組，實現動態避障、物體辨識與自主夾取。
               </span>
               <span class="i18n-en">
-                Mobile manipulation platform combining an AMR base with dual TM5S robotic arms and a ROS 2 / Nav2 navigation stack. Features the Garbage Classification YOLO (YOLOv11-OBB) perception module for real-time classification, grasp-center, yaw and grip-width prediction, dynamic obstacle avoidance and autonomous grasping.
+                Mobile manipulation platform combining an AMR base with dual TM5S robotic arms and a ROS 2 / Nav2 navigation stack. Features the Garbage YOLO (YOLOv11-OBB) perception module for real-time classification, grasp-center, yaw and grip-width prediction, dynamic obstacle avoidance and autonomous grasping.
               </span>
             </p>
             <div class="pill-stack">
@@ -1676,9 +1673,14 @@
               <span class="micro-pill">TM5S Arms</span>
               <span class="micro-pill">Robot Grasping</span>
             </div>
+            <div class="project-row-links">
+              <a href="https://huggingface.co/datasets/0326BlueW/robotic-garbage-obb" target="_blank" rel="noopener noreferrer" class="text-link">
+                <span>Hugging Face Dataset</span> <span>↗</span>
+              </a>
+            </div>
           </div>
           <div class="project-row-media">
-            <img alt="Garbage Classification YOLO live demo" draggable="false">
+            <img alt="Garbage YOLO live demo" draggable="false">
           </div>
         </div>
 
