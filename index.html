@@ -921,14 +921,23 @@
       pointer-events: auto;
     }
 
-    .project-row-media img {
+    .project-row-media img,
+    .project-row-media iframe {
       display: block;
       width: 100%;
-      height: auto;
       border-radius: 14px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
       background: #0b1120;
+    }
+
+    .project-row-media img {
+      height: auto;
+    }
+
+    .project-row-media iframe {
+      aspect-ratio: 16 / 9;
+      border: none;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1003,6 +1012,30 @@
       background: rgba(255, 255, 255, 0.035);
       border: 1px solid rgba(255, 255, 255, 0.07);
       color: var(--text-secondary);
+    }
+
+    .status-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      color: var(--accent-cyan);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      vertical-align: middle;
+    }
+
+    .project-row-status {
+      margin-top: 8px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
     }
 
     .card-link-group {
@@ -1684,9 +1717,47 @@
           </div>
         </div>
 
-        <!-- Project 2: NCKU Moodle Keeper -->
-        <div class="project-row">
+        <!-- Project 2: FSim -->
+        <div class="project-row" data-expand-src="https://www.youtube-nocookie.com/embed/utUSvxDDtBY">
           <span class="project-row-index">02</span>
+          <div class="project-row-main">
+            <h3 class="project-row-title">
+              <span class="i18n-zh">FSim — F-16 空戰模擬軟體</span>
+              <span class="i18n-en">FSim — F-16 Air Combat Simulator</span>
+            </h3>
+            <div class="project-row-status">
+              <span class="status-pill">Coming Soon</span>
+            </div>
+            <p class="project-row-desc">
+              <span class="i18n-zh">
+                用 UE5 渲染畫面、JSBSim 驅動飛行動力學的工程級 F-16 空戰模擬軟體。專為空戰 AI 研究設計，架構上透過 UDP 將物理、裁判與對手模型跑在 Host 端，解耦前端座艙與地景渲染。支援研究員親自駕駛與自研強化學習（RL）或規則型模型即時對打，實測並分析模型弱點。
+              </span>
+              <span class="i18n-en">
+                An engineering-grade F-16 flight simulation tool rendered in Unreal Engine 5 and powered by JSBSim dynamics. Designed for air combat AI research, utilizing a UDP architecture to decouple host-side physics, refereeing, and opponent models from client-side visuals. Enables researchers to fly against their custom RL or rule-based models in real time to diagnose weaknesses.
+              </span>
+            </p>
+            <div class="pill-stack">
+              <span class="micro-pill">Unreal Engine 5</span>
+              <span class="micro-pill">JSBSim</span>
+              <span class="micro-pill">Air Combat AI</span>
+              <span class="micro-pill">Cesium 3D Tiles</span>
+              <span class="micro-pill">UDP Architecture</span>
+              <span class="micro-pill">C++</span>
+            </div>
+            <div class="project-row-links">
+              <a href="https://youtu.be/utUSvxDDtBY?si=rsNovdH4wXIYMeYC" target="_blank" rel="noopener noreferrer" class="text-link">
+                <span>YouTube Demo</span> <span>↗</span>
+              </a>
+            </div>
+          </div>
+          <div class="project-row-media">
+            <iframe title="FSim Air Combat Simulator Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          </div>
+        </div>
+
+        <!-- Project 3: NCKU Moodle Keeper -->
+        <div class="project-row">
+          <span class="project-row-index">03</span>
           <div class="project-row-main">
             <a class="project-row-title" href="https://github.com/bigbluew/ncku-moodle-keeper" target="_blank" rel="noopener noreferrer">
               <img src="assets/moodle_keeper_icon.png" alt="" draggable="false">
@@ -1715,9 +1786,9 @@
           <a class="project-row-arrow" href="https://github.com/bigbluew/ncku-moodle-keeper" target="_blank" rel="noopener noreferrer" aria-label="NCKU Moodle Keeper GitHub repository">↗</a>
         </div>
 
-        <!-- Project 3: ActInSpace -->
+        <!-- Project 4: ActInSpace -->
         <div class="project-row">
-          <span class="project-row-index">03</span>
+          <span class="project-row-index">04</span>
           <div class="project-row-main">
             <h3 class="project-row-title">
               <span class="i18n-zh">ActInSpace 國際太空黑客松</span>
@@ -2038,8 +2109,8 @@
         entries.forEach(entry => {
           if (!entry.isIntersecting) return;
           const row = entry.target;
-          const img = row.querySelector('.project-row-media img');
-          if (img && !img.getAttribute('src')) img.src = row.getAttribute('data-expand-src');
+          const media = row.querySelector('.project-row-media img, .project-row-media iframe');
+          if (media && !media.getAttribute('src')) media.src = row.getAttribute('data-expand-src');
           io.unobserve(row);
         });
       }, { rootMargin: '200px' });
