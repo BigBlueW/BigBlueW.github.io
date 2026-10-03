@@ -15,6 +15,7 @@
   <script>
     (function() {
       try {
+        // Language detection
         var savedLang = localStorage.getItem('bluew_lang');
         if (!savedLang) {
           var browserLang = (navigator.language || (navigator.languages && navigator.languages[0]) || '').toLowerCase();
@@ -204,7 +205,6 @@
       max-width: 1040px;
       margin: 0 auto;
       padding: 0 24px 100px;
-      overflow-x: clip;
     }
 
     /* Navigation Bar */
@@ -298,6 +298,7 @@
     .hero-wrap {
       position: relative;
       padding: 48px 0 0;
+      overflow: visible;
     }
 
     .hero-grid {
@@ -341,6 +342,27 @@
       position: relative;
       width: 100%;
       max-width: 460px;
+    }
+
+    /* Horizontal half-light — crisp solid white baseline with upward emission, zero downward spill */
+    .hero-photo-frame::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 96%;
+      height: 2px;
+      /* Solid pure white in the center, smoothly fading to transparent at the outer tips */
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.85) 15%, #ffffff 50%, rgba(255, 255, 255, 0.85) 85%, transparent 100%);
+      box-shadow:
+        0 -1px 4px 1px rgba(255, 255, 255, 0.95),
+        0 -4px 16px 2px rgba(255, 255, 255, 0.5),
+        0 -12px 36px 4px rgba(255, 255, 255, 0.25);
+      /* Strict boundary: anything below the baseline is 100% clipped */
+      clip-path: inset(-80px -50px 0 -50px);
+      z-index: 10;
+      pointer-events: none;
     }
 
     .hero-photo-glow {
@@ -1105,77 +1127,118 @@
       color: var(--text-tertiary);
     }
 
-    /* Contact Block with Click-to-Copy */
-    .contact-card-inner {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
+    /* Contact Section Modern Redesign */
+    .contact-status {
+      display: inline-flex;
       align-items: center;
-      gap: 24px;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent-teal);
+      background: rgba(45, 212, 191, 0.08);
+      border: 1px solid rgba(45, 212, 191, 0.2);
+      padding: 5px 12px;
+      border-radius: 9999px;
+      margin-bottom: 18px;
+      width: fit-content;
     }
 
-    .contact-title {
-      font-size: 19px;
+    .contact-status-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background: var(--accent-teal);
+      box-shadow: 0 0 8px var(--accent-teal);
+      animation: pulse-dot 2.5s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .contact-lead {
+      font-size: 21px;
       font-weight: 700;
       color: #ffffff;
-      margin-bottom: 4px;
+      letter-spacing: -0.015em;
+      margin-bottom: 8px;
     }
 
-    .contact-sub {
-      font-size: 13.5px;
+    .contact-lead-desc {
+      font-size: 14px;
       color: var(--text-secondary);
-      margin-bottom: 16px;
+      line-height: 1.65;
+      margin-bottom: 22px;
     }
 
     .email-container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       width: 100%;
-      max-width: 460px;
     }
 
     .email-copy-btn {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      font-family: var(--font-mono);
-      font-size: 13.5px;
-      color: var(--text-primary);
+      gap: 14px;
       background: rgba(255, 255, 255, 0.025);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      padding: 10px 14px;
-      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 12px 16px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       width: 100%;
       text-align: left;
     }
 
     .email-copy-btn:hover {
-      border-color: rgba(56, 189, 248, 0.35);
-      color: var(--accent-cyan);
-      background: rgba(56, 189, 248, 0.05);
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.06);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     }
 
     .email-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .email-type {
+      font-family: var(--font-mono);
       font-size: 11px;
-      color: var(--text-tertiary);
-      min-width: 65px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      padding: 3px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .email-address {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .copy-hint {
-      font-size: 11px;
+      font-size: 11.5px;
       font-family: var(--font-mono);
       color: var(--text-tertiary);
-      transition: all 0.2s ease;
+      transition: color 0.2s ease;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .email-copy-btn:hover .copy-hint {
@@ -1185,6 +1248,90 @@
     .copy-hint.copied {
       color: var(--accent-teal) !important;
       font-weight: 700;
+    }
+
+    /* Contact Social Panel */
+    .contact-profiles {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .profile-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .profile-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.06);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .profile-card-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .profile-card:hover .profile-card-icon {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: var(--accent-cyan);
+    }
+
+    .profile-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .profile-card-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.3;
+    }
+
+    .profile-card-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .profile-card-arrow {
+      font-size: 16px;
+      color: var(--text-tertiary);
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .profile-card:hover .profile-card-arrow {
+      color: var(--accent-cyan);
+      transform: translate(2px, -2px);
     }
 
     /* Footer */
@@ -1401,17 +1548,12 @@
         padding: 5px 10px;
         border-radius: 6px;
       }
-      .contact-card-inner {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 20px;
-      }
-      .contact-title {
+      .contact-lead {
         font-size: 18px;
       }
-      .contact-sub {
+      .contact-lead-desc {
         font-size: 13px;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
       }
       .email-container {
         width: 100%;
@@ -1462,9 +1604,90 @@
         font-size: 12px;
       }
     }
+
+    /* ===== Nav Actions Container ===== */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ===== Color Rhythm — Section Accents ===== */
+    #projects { --section-accent: var(--accent-teal); }
+    #skills   { --section-accent: var(--accent-amber); }
+    #talks    { --section-accent: var(--accent-indigo); }
+    #contact  { --section-accent: var(--accent-cyan); }
+
+    .section-block::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140%;
+      height: 450px;
+      background: radial-gradient(ellipse at 50% 0%, var(--section-glow, transparent) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #projects::before { --section-glow: rgba(45, 212, 191, 0.045); }
+    #skills::before   { --section-glow: rgba(251, 191, 36, 0.035); }
+    #talks::before    { --section-glow: rgba(129, 140, 248, 0.045); }
+    #contact::before  { --section-glow: rgba(56, 189, 248, 0.035); }
+
+    #projects .sec-ghost { color: rgba(45, 212, 191, 0.05); -webkit-text-stroke-color: rgba(45, 212, 191, 0.055); }
+    #skills .sec-ghost   { color: rgba(251, 191, 36, 0.05); -webkit-text-stroke-color: rgba(251, 191, 36, 0.055); }
+    #talks .sec-ghost    { color: rgba(129, 140, 248, 0.05); -webkit-text-stroke-color: rgba(129, 140, 248, 0.055); }
+    #contact .sec-ghost  { color: rgba(56, 189, 248, 0.05); -webkit-text-stroke-color: rgba(56, 189, 248, 0.055); }
+
+    /* Section accent bleeds into hover states */
+    #projects .project-row:hover .project-row-title,
+    #projects .project-row:hover .project-row-index,
+    #projects .project-row:hover .project-row-arrow { color: var(--accent-teal); }
+
+    #talks .project-row:hover .project-row-title,
+    #talks .project-row:hover .project-row-index,
+    #talks .project-row:hover .project-row-arrow { color: var(--accent-indigo); }
+
+    /* ===== Scroll Progress Bar ===== */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-indigo), var(--accent-amber));
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* ===== Cursor Glow ===== */
+    .cursor-glow {
+      position: fixed;
+      width: 550px;
+      height: 550px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.035) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .cursor-glow.visible { opacity: 1; }
+
+    /* ===== Talks compact — use Projects gap:0 for row borders ===== */
+    #talks .bento-container { gap: 0; }
   </style>
 </head>
 <body>
+
+  <!-- Scroll Progress Bar -->
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <!-- Cursor Glow -->
+  <div class="cursor-glow" aria-hidden="true"></div>
 
   <!-- Static Deep Dark Atmosphere -->
   <div class="ambient-atmosphere"></div>
@@ -1515,9 +1738,9 @@
       </div>
 
       <button class="lang-btn" id="langToggleBtn" type="button" aria-label="Toggle Language">
-        <span class="i18n-zh">EN</span>
-        <span class="i18n-en">中文</span>
-      </button>
+          <span class="i18n-zh">EN</span>
+          <span class="i18n-en">中文</span>
+        </button>
     </header>
 
     <!-- Hero Section -->
@@ -1590,85 +1813,10 @@
       </div>
     </section>
 
-    <!-- Featured Presentation -->
-    <section class="section-block" id="talks">
-      <div class="sec-ghost" aria-hidden="true">02</div>
-      <h2 class="sec-title">
-        <span class="i18n-zh">簡報</span>
-        <span class="i18n-en">Presentations</span>
-      </h2>
-
-      <div class="bento-container">
-        <div class="bento-panel w-12">
-          <div class="talk-tags">
-            <span class="tag-chip tag-cyan">
-              <span class="i18n-zh">實驗室組會</span>
-              <span class="i18n-en">LAB GROUP MEETING</span>
-            </span>
-            <span class="tag-chip">2026-09-15</span>
-          </div>
-
-          <h3 class="talk-heading">
-            <span class="i18n-zh">潛在動作模型（LAM）與 AI dogfight</span>
-            <span class="i18n-en">Latent Action Models (LAM) & AI Dogfight</span>
-          </h3>
-
-          <p class="talk-summary">
-            <span class="i18n-zh">
-              探討如何突破傳統模仿學習（BC）缺乏搖桿動作標籤與純強化學習（RL）探索成本高昂之困境，利用逆動力學（IDM）與前向世界模型（FDM）互斥閉環，自海量專家動態中自監督提煉動作先驗；並結合空戰仿真實測，深入剖析 3.14 億步 SAC 模型局限，提出階層式切換控制、PFSP 對手池與 28 維時序意圖擴充架構。
-            </span>
-            <span class="i18n-en">
-              Addressing the lack of action labels in Behavioral Cloning (BC) and high exploration costs in pure Reinforcement Learning (RL), exploring how Latent Action Models (LAM) leverage Inverse Dynamics (IDM) and Forward Dynamics (FDM) in a dual-loop framework to extract action priors. Incorporating empirical evaluation of a 314M-step SAC baseline in high-speed flight simulation, proposing hierarchical switching control, PFSP opponent pool sampling, and 28D latent action expansion.
-            </span>
-          </p>
-
-          <div class="talk-cards-trio">
-            <div class="trio-item">
-              <div class="trio-label">
-                <span class="i18n-zh">▹ PART 1: 潛在動作模型</span>
-                <span class="i18n-en">▹ PART 1: Latent Action Models</span>
-              </div>
-              <div class="trio-desc">
-                <span class="i18n-zh">三階段自監督提煉架構、坐標無關空間動力學、BigFish 128 維 PCA 投影散佈。</span>
-                <span class="i18n-en">Three-stage pipeline, coordinate-invariant dynamics, BigFish 128D PCA latent projection.</span>
-              </div>
-            </div>
-            <div class="trio-item">
-              <div class="trio-label">
-                <span class="i18n-zh">▹ PART 2: 空戰模型實測</span>
-                <span class="i18n-en">▹ PART 2: Air Combat Evaluation</span>
-              </div>
-              <div class="trio-desc">
-                <span class="i18n-zh">官方 Baseline 模型逆向剖析、末端 2 度持鎖抖動痛點、階層切換控制與 PFSP 對手池。</span>
-                <span class="i18n-en">Official SAC baseline breakdown, 2° aiming jitter challenges, switching control, and PFSP.</span>
-              </div>
-            </div>
-            <div class="trio-item">
-              <div class="trio-label">
-                <span class="i18n-zh">▹ PART 3: 算力與 LOCAL AI</span>
-                <span class="i18n-en">▹ PART 3: Compute & Local AI</span>
-              </div>
-              <div class="trio-desc">
-                <span class="i18n-zh">工作站私有算力資源、100% 本地隱私、長篇 PDF 論文研讀與雙工具鏈體驗。</span>
-                <span class="i18n-en">Workstation compute setup, 100% local privacy, long-context paper reader, dual toolchains.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="talk-launch-row">
-            <a href="slides/260915/" class="btn-launch">
-              <span class="i18n-zh">開啟全螢幕簡報 (Launch Slides)</span>
-              <span class="i18n-en">Launch Fullscreen Slides</span>
-              <span>➜</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- Selected Projects -->
     <section class="section-block" id="projects">
-      <div class="sec-ghost" aria-hidden="true">03</div>
+      <div class="sec-ghost" aria-hidden="true">02</div>
       <h2 class="sec-title">
         <span class="i18n-zh">專案</span>
         <span class="i18n-en">Projects</span>
@@ -1815,7 +1963,7 @@
 
     <!-- Skills & Tech Stack -->
     <section class="section-block" id="skills">
-      <div class="sec-ghost" aria-hidden="true">04</div>
+      <div class="sec-ghost" aria-hidden="true">03</div>
       <h2 class="sec-title">
         <span class="i18n-zh">專業技能與工具</span>
         <span class="i18n-en">Skills & Toolchain</span>
@@ -1886,56 +2034,142 @@
       </div>
     </section>
 
-    <!-- Contact Block with Click-to-Copy -->
+    <!-- Presentations (compact) -->
+    <section class="section-block" id="talks">
+      <div class="sec-ghost" aria-hidden="true">04</div>
+      <h2 class="sec-title">
+        <span class="i18n-zh">簡報</span>
+        <span class="i18n-en">Presentations</span>
+      </h2>
+
+      <div class="bento-container">
+        <div class="project-row">
+          <span class="project-row-index">01</span>
+          <div class="project-row-main">
+            <h3 class="project-row-title">
+              <span class="i18n-zh">潛在動作模型（LAM）與 AI dogfight</span>
+              <span class="i18n-en">Latent Action Models (LAM) &amp; AI Dogfight</span>
+            </h3>
+            <p class="project-row-desc">
+              <span class="i18n-zh">
+                探討如何利用 IDM 與 FDM 互斥閉環自監督提煉動作先驗，並結合空戰仿真剖析 SAC 模型局限，提出階層式切換控制與 PFSP 對手池架構。
+              </span>
+              <span class="i18n-en">
+                Exploring how LAM leverages IDM and FDM in a dual-loop framework to extract action priors, with air combat evaluation, hierarchical switching control, and PFSP opponent pool.
+              </span>
+            </p>
+            <div class="pill-stack">
+              <span class="micro-pill">
+                <span class="i18n-zh">實驗室組會</span>
+                <span class="i18n-en">Lab Meeting</span>
+              </span>
+              <span class="micro-pill">2026-09-15</span>
+              <span class="micro-pill">LAM</span>
+              <span class="micro-pill">Air Combat RL</span>
+            </div>
+            <div class="project-row-links">
+              <a href="slides/260915/" class="text-link">
+                <span class="i18n-zh">開啟簡報</span>
+                <span class="i18n-en">View Slides</span>
+                <span> ➜</span>
+              </a>
+            </div>
+          </div>
+          <a class="project-row-arrow" href="slides/260915/" aria-label="View slides">➜</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
     <section class="section-block" id="contact">
       <div class="sec-ghost" aria-hidden="true">05</div>
       <h2 class="sec-title">
-        <span class="i18n-zh">聯絡與交流</span>
-        <span class="i18n-en">Get in Touch</span>
+        <span class="i18n-zh">聯絡</span>
+        <span class="i18n-en">Contact</span>
       </h2>
 
-      <div class="bento-panel w-12">
-        <div class="contact-card-inner">
-          <div>
-            <div class="contact-title">
-              <span class="i18n-zh">巫冠呈 Guan-Cheng Wu</span>
-              <span class="i18n-en">Guan-Cheng Wu</span>
-            </div>
-            <div class="contact-sub">
-              <span class="i18n-zh">國立成功大學 航空太空工程學系 雙主修 資訊工程學系</span>
-              <span class="i18n-en">National Cheng Kung University · Aerospace & Computer Science</span>
-            </div>
-
-            <div class="email-container">
-              <!-- Click to Copy Personal Email -->
-              <button class="email-copy-btn" data-email="badonkadooonkmc@gmail.com" type="button" title="點擊複製 Email">
-                <div class="email-left">
-                  <span class="email-type">Personal:</span>
-                  <span>badonkadooonkmc@gmail.com</span>
-                </div>
-                <span class="copy-hint">
-                  <span class="i18n-zh">點擊複製</span>
-                  <span class="i18n-en">Copy</span>
-                </span>
-              </button>
-
-              <!-- Click to Copy Academic Email -->
-              <button class="email-copy-btn" data-email="F44136211@gs.ncku.edu.tw" type="button" title="點擊複製 Email">
-                <div class="email-left">
-                  <span class="email-type">Academic:</span>
-                  <span>F44136211@gs.ncku.edu.tw</span>
-                </div>
-                <span class="copy-hint">
-                  <span class="i18n-zh">點擊複製</span>
-                  <span class="i18n-en">Copy</span>
-                </span>
-              </button>
-            </div>
+      <div class="bento-container">
+        <!-- Main Email Panel -->
+        <div class="bento-panel w-7">
+          <div class="contact-status">
+            <span class="contact-status-dot"></span>
+            <span class="i18n-zh">歡迎學術探討、專案合作或技術交流</span>
+            <span class="i18n-en">Open for research, collaboration &amp; discussions</span>
           </div>
 
-          <div>
-            <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer" class="cta-btn cta-ghost">
-              <span>GitHub @BigBlueW ↗</span>
+          <h3 class="contact-lead">
+            <span class="i18n-zh">保持聯繫</span>
+            <span class="i18n-en">Get in Touch</span>
+          </h3>
+          <p class="contact-lead-desc">
+            <span class="i18n-zh">點擊下方按鈕即可快速複製信箱地址：</span>
+            <span class="i18n-en">Click any address below to copy to clipboard:</span>
+          </p>
+
+          <div class="email-container">
+            <!-- Personal Email -->
+            <button class="email-copy-btn" data-email="badonkadooonkmc@gmail.com" type="button" title="點擊複製 Email">
+              <div class="email-left">
+                <span class="email-type">Personal</span>
+                <span class="email-address">badonkadooonkmc@gmail.com</span>
+              </div>
+              <span class="copy-hint">
+                <span class="i18n-zh">點擊複製</span>
+                <span class="i18n-en">Copy</span>
+              </span>
+            </button>
+
+            <!-- Academic Email -->
+            <button class="email-copy-btn" data-email="F44136211@gs.ncku.edu.tw" type="button" title="點擊複製 Email">
+              <div class="email-left">
+                <span class="email-type">Academic</span>
+                <span class="email-address">F44136211@gs.ncku.edu.tw</span>
+              </div>
+              <span class="copy-hint">
+                <span class="i18n-zh">點擊複製</span>
+                <span class="i18n-en">Copy</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Social & Platforms Panel -->
+        <div class="bento-panel w-5">
+          <div class="category-header">
+            <span>[ SOCIAL &amp; PLATFORMS ]</span>
+          </div>
+
+          <div class="contact-profiles">
+            <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer" class="profile-card">
+              <div class="profile-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+              </div>
+              <div class="profile-card-info">
+                <div class="profile-card-title">
+                  GitHub
+                </div>
+                <div class="profile-card-sub">
+                  <span class="i18n-zh">@BigBlueW · 開源專案與程式碼</span>
+                  <span class="i18n-en">@BigBlueW · Code &amp; Repositories</span>
+                </div>
+              </div>
+              <span class="profile-card-arrow">↗</span>
+            </a>
+
+            <a href="https://huggingface.co/0326BlueW" target="_blank" rel="noopener noreferrer" class="profile-card">
+              <div class="profile-card-icon">
+                🤗
+              </div>
+              <div class="profile-card-info">
+                <div class="profile-card-title">
+                  Hugging Face
+                </div>
+                <div class="profile-card-sub">
+                  <span class="i18n-zh">@0326BlueW · 模型權重與數據集</span>
+                  <span class="i18n-en">@0326BlueW · Models &amp; Datasets</span>
+                </div>
+              </div>
+              <span class="profile-card-arrow">↗</span>
             </a>
           </div>
         </div>
@@ -1945,15 +2179,25 @@
     <!-- Footer -->
     <footer>
       <div class="footer-content">
-        <div class="footer-copyright">
-          &copy; 2026 巫冠呈 (Guan-Cheng Wu / BlueW). Hosted on GitHub Pages.
+        <div>
+          <div class="footer-copyright">
+            &copy; 2026 巫冠呈 (Guan-Cheng Wu / BlueW)
+          </div>
+          <div class="footer-built" style="font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary);margin-top:4px;letter-spacing:0.4px;">
+            Built with HTML · CSS · JS &nbsp;/&nbsp; Hosted on GitHub Pages
+          </div>
         </div>
         <div class="footer-nav">
+          <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://huggingface.co/0326BlueW" target="_blank" rel="noopener noreferrer">Hugging Face</a>
+          <a href="#contact">
+            <span class="i18n-zh">聯絡</span>
+            <span class="i18n-en">Contact</span>
+          </a>
           <a href="#top">
             <span class="i18n-zh">返回頂部 ↑</span>
             <span class="i18n-en">Back to Top ↑</span>
           </a>
-          <a href="https://github.com/BigBlueW" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
       </div>
     </footer>
@@ -2151,35 +2395,44 @@
       targets.forEach(el => io.observe(el));
     })();
 
-    // 5. Hero Name Scramble Decode
+    // 5. Hero Name Scramble Decode (bug-fixed: caches original texts to survive rapid lang toggling)
     (function() {
       const nameEl = document.querySelector('.hero-name');
       if (!nameEl) return;
       const CHARS = '█▓▒░<>/[]{}=+*^?#_';
       let timer = null;
 
+      // Cache original texts once on init so mid-scramble reads never corrupt them
+      const spans = nameEl.querySelectorAll('span');
+      const originals = new Map();
+      spans.forEach(function(s) { originals.set(s, s.textContent); });
+
       function visibleSpan() {
-        const spans = nameEl.querySelectorAll('span');
         for (const s of spans) {
           if (s.offsetParent !== null) return s;
         }
         return null;
       }
 
+      function restoreAll() {
+        if (timer) { cancelAnimationFrame(timer); timer = null; }
+        originals.forEach(function(text, s) { s.textContent = text; });
+      }
+
       function scramble() {
+        restoreAll();
         const span = visibleSpan();
         if (!span) return;
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const original = span.textContent;
-        if (timer) cancelAnimationFrame(timer);
-        const start = performance.now();
-        const duration = 900;
+        var original = originals.get(span);
+        var start = performance.now();
+        var duration = 900;
         function frame(now) {
-          const p = Math.min((now - start) / duration, 1);
-          const settled = Math.floor(p * original.length);
-          let out = '';
-          for (let i = 0; i < original.length; i++) {
-            const ch = original[i];
+          var p = Math.min((now - start) / duration, 1);
+          var settled = Math.floor(p * original.length);
+          var out = '';
+          for (var i = 0; i < original.length; i++) {
+            var ch = original[i];
             if (i < settled || ch === ' ' || ch === '-') {
               out += ch;
             } else {
@@ -2199,10 +2452,48 @@
 
       setTimeout(scramble, 320);
 
-      const htmlEl = document.documentElement;
-      new MutationObserver(() => {
+      var htmlEl = document.documentElement;
+      new MutationObserver(function() {
+        restoreAll();
         setTimeout(scramble, 60);
       }).observe(htmlEl, { attributes: true, attributeFilter: ['data-lang'] });
+    })();
+
+
+    // 7. Scroll Progress Bar
+    (function() {
+      var bar = document.querySelector('.scroll-progress');
+      if (!bar) return;
+      var ticking = false;
+      window.addEventListener('scroll', function() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function() {
+          ticking = false;
+          var h = document.documentElement.scrollHeight - window.innerHeight;
+          bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
+        });
+      }, { passive: true });
+    })();
+
+    // 8. Cursor Glow (desktop only, respects prefers-reduced-motion)
+    (function() {
+      if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var glow = document.querySelector('.cursor-glow');
+      if (!glow) return;
+      var ticking = false;
+      document.addEventListener('mousemove', function(e) {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function() {
+          ticking = false;
+          glow.style.left = e.clientX + 'px';
+          glow.style.top = e.clientY + 'px';
+          if (!glow.classList.contains('visible')) glow.classList.add('visible');
+        });
+      }, { passive: true });
+      document.addEventListener('mouseleave', function() { glow.classList.remove('visible'); });
     })();
   </script>
 </body>
