@@ -280,7 +280,7 @@ table.nt td.nm{font-family:var(--mono);font-weight:500;font-size:22px;color:var(
 </div>
 <ul class="tight">
 <li class="step">只有「結果」的 Reward 很<strong>少</strong>也很<strong>晚</strong>：幾百手裡只有最後一手有分數，贏了也不知道是哪幾手的功勞。這叫 <strong>sparse reward</strong>。</li>
-<li class="step">「每一步」的 Reward 讓 Agent 好學很多，但要小心它只顧著拿這種分數（後面「鑽漏洞」會講）。</li>
+<li class="step">「每一步」的 Reward 讓 Agent 好學很多。</li>
 </ul>
 </section>
 
@@ -355,14 +355,14 @@ table.nt td.nm{font-family:var(--mono);font-weight:500;font-size:22px;color:var(
 <section class="slide">
 <div class="kicker">簡介<b>· 07</b></div>
 <h1><em>Advantage</em>：跟平常比</h1>
-<p class="lead">最直接的做法：這一局 Return 高，就把做過的 Action 機率全部調高。但是……</p>
+<p class="lead">每個 Action 的 Return，先減掉「平常的分數」：</p>
 <table class="bl" style="margin:6px auto 0;font-size:27px">
 <tr><th></th><th>拿到的 Return</th><th class="c2">減掉平常的 4 分</th><th class="c2">機率</th></tr>
 <tr><td>Action A</td><td>3</td><td class="c2">−1</td><td class="c2">調低</td></tr>
 <tr><td>Action B</td><td>5</td><td class="c2 red"><strong>+1</strong></td><td class="c2 red"><strong>調高</strong></td></tr>
 <tr><td>Action C</td><td>4</td><td class="c2">0</td><td class="c2">不動</td></tr>
 </table>
-<p class="small" style="text-align:center;margin-top:6px">只看 Return：三個都是正的，全部調高，看不出誰真的好。<span class="step r1" data-o="1">「平常的水準」叫 <strong>Baseline</strong>。</span></p>
+<p class="small" style="text-align:center;margin-top:6px"><span class="step r1" data-o="1">「平常的水準」叫 <strong>Baseline</strong>。</span></p>
 <p class="step" data-o="2" style="text-align:center;margin-top:12px">但「平常」要看局面：</p>
 <div class="cols step" data-o="2" style="margin-top:6px;align-items:center">
 <div class="card" style="display:flex;align-items:center;gap:16px;padding:12px 18px">
